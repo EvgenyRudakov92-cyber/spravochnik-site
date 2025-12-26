@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Телефонный справочник</title>
+    <meta name="theme-color" content="#ff6b00">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #000; min-height: 100vh; }
+
+        .container { max-width: 600px; margin: 0 auto; background: rgba(255,255,255,0.0); border-radius: 20px 20px 0 0; box-shadow: 0 20px 40px rgba(0,0,0,0.3); overflow: hidden; }
+
+        .header { background: linear-gradient(135deg, #ff6b00, #b33939); color: white; padding: 16px 20px; text-align: center; position: relative; }
+        .header h1 { font-size: 18px; margin-bottom: 4px; letter-spacing: 1px; }
+        .header p { font-size: 12px; opacity: 0.9; }
+
+        .back-btn {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 2px solid #ffffff;
+            background: linear-gradient(135deg,#ff7a00,#ff3b00);
+            color: #fff;
+            font-size: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .search-box { padding: 16px 20px; background: transparent; }
+        .search-input { width: 100%; padding: 10px 16px; font-size: 15px; border: 2px solid #e1e5e9; border-radius: 30px; outline: none; transition: all 0.3s; }
+        .search-input:focus { border-color: #ff6b00; box-shadow: 0 0 0 3px rgba(255,107,0,0.15); }
+
+        .list { padding: 0 12px 12px; max-height: 40vh; overflow-y: auto; background:transparent; }
+        .no-results { text-align: center; padding: 20px 12px; color: #f1f2f6; font-size: 15px; }
+
+        /* КАРТОЧКА */
+        .card {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #000000;
+            border-radius: 30px;
+            padding: 18px 20px;
+            margin: 12px 0;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.08),
+                        0 16px 40px rgba(0,0,0,0.9);
+            color: #ffffff;
+            overflow: hidden;
+        }
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: -40%;
+            background: radial-gradient(circle at center, rgba(255,120,0,0.9), transparent 60%);
+            opacity: 0.8;
+            z-index: 0;
+        }
+        .card-content {
+            position: relative;
+            z-index: 1;
+            max-width: 65%;
+        }
+        .card-title-main {
+            font-size: 22px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .card-title-sub {
+            font-size: 16px;
+            font-weight: 500;
+            font-style: italic;
+            margin-bottom: 6px;
+        }
+        .card-city {
+            font-size: 13px;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+            opacity: 0.9;
+        }
+        .card-phone {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        .card-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn-circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 26px rgba(0,0,0,0.8);
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            text-decoration: none;
+        }
+        .btn-circle span {
+            font-size: 34px;
+            color: #ffffff;
+        }
+        .btn-call-circle {
+            background: radial-gradient(circle at 30% 30%, #7fff5a, #00a826);
+        }
+        .btn-site-circle {
+            background: radial-gradient(circle at 30% 30%, #7fd4ff, #005bb5);
+        }
+        .btn-circle:active {
+            transform: scale(0.94);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.9);
+        }
+
+        /* КНОПКИ В СТИЛЕ «ДАЛЕЕ» */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px 22px;
+            border-radius: 25px;
+            border: 2px solid #ffffff;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            background: linear-gradient(135deg,#ff7a00,#ff3b00);
+            color: #ffffff;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+        }
+        .btn:hover {
+            box-shadow: 0 8px 22px rgba(0,0,0,0.6);
+            transform: translateY(-1px);
+        }
+        .btn:active {
+            transform: translateY(1px) scale(0.97);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.7);
+        }
+        .btn-primary,
+        .btn-success,
+        .btn-feedback {
+            background: linear-gradient(135deg,#ff7a00,#ff3b00);
+            color:#ffffff;
+        }
+
+        /* Ряд кнопок снизу */
+        .buttons-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+        }
+        .buttons-row .btn {
+            flex: 1 1 0;
+            padding: 10px 8px;
+            font-size: 13px;
+        }
+
+        .btn-danger { background: #e17055; color: white; }
+        .btn-danger:hover { background: #d63031; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        #adminScreen input, #adminScreen textarea,
+        #profileScreen input, #profileScreen textarea,
+        #feedbackScreen textarea {
+            width: 100%; padding: 10px; margin-bottom: 10px;
+            border: 2px solid #e1e5e9; border-radius: 8px; font-size: 14px;
+        }
+        #adminScreen input:focus, #profileScreen input:focus, #feedbackScreen textarea:focus {
+            border-color: #ff6b00; outline: none;
+        }
+        .admin-item { background: #f8f9fa; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 13px; }
+        .status-active { color: #27ae60; font-weight: bold; }
+        .status-expired { color: #e74c3c; font-weight: bold; }
+        .days-select { background:#f8f9fa; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; }
+        .city-suggestions {
+            position:absolute;
+            top:100%;
+            left:50%;
+            transform:translateX(-50%);
+            width:100%;
+            max-width:420px;
+            background:rgba(0,0,0,0.85);
+            color:#fff;
+            border-radius:8px;
+            margin-top:6px;
+            max-height:140px;
+            overflow-y:auto;
+            font-size:14px;
+            z-index:3;
+        }
+        .city-suggestion-item{
+            padding:8px 12px;
+            border-bottom:1px solid rgba(255,255,255,0.1);
+            cursor:pointer;
+        }
+        .city-suggestion-item:hover{
+            background:rgba(255,255,255,0.08);
+        }
+
+        .category-big{
+            width:100%;
+            margin:6px 0;
+            padding:10px 8px;
+            border-radius:28px;
+            border:2px solid #ffffff;
+            background:linear-gradient(135deg,#000000,#ff7a00);
+            color:#ffffff;
+            font-size:18px;
+            font-weight:800;
+            text-align:center;
+            cursor:pointer;
+            box-shadow:0 6px 14px rgba(0,0,0,0.5);
+        }
+        .category-big:active{
+            transform:scale(0.97);
+        }
+
+        .category-pill{
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            padding:6px 10px;
+            margin-bottom:6px;
+            border-radius:16px;
+            background:#f1f2f6;
+            font-size:13px;
+        }
+        .category-pill span{
+            flex:1;
+        }
+
+        /* Аккордеон в админке */
+        .admin-section { margin-bottom: 10px; }
+        .admin-section-title {
+            width:100%;
+            text-align:left;
+            padding:10px 12px;
+            border-radius:10px;
+            border:2px solid #ff7a00;
+            background:linear-gradient(135deg,#000000,#ff7a00);
+            color:#ffffff;
+            font-size:14px;
+            font-weight:700;
+            cursor:pointer;
+            margin-bottom:4px;
+        }
+        .admin-section-body {
+            border-radius:10px;
+            background:#f8f9fa;
+            padding:10px;
+            display:none;
+        }
+        .admin-section-body.active { display:block; }
+    </style>
+</head>
+<body>
+
+    <!-- ПЕРВЫЙ ЭКРАН -->
+    <div id="startScreen" class="screen active" style="max-width:600px;margin:0 auto;overflow:hidden;">
+        <div style="
+            position:relative;
+            height:100vh;
+            max-height:800px;
+            background:#000;
+            padding:20px 20px 100px 20px;
+            display:flex;
+            flex-direction:column;
+            align-items:center;
+        ">
+            <div style="
+                flex:1;
+                width:100%;
+                display:flex;
+                flex-direction:column;
+                align-items:center;
+            ">
+                <div style="
+                    flex:1;
+                    width:100%;
+                    display:flex;
+                    justify-content:center;
+                    align-items:center;
+                ">
+                    <img src="IKONKA.png"
+                         alt="Телефонный справочник"
+                         style="width:70%; max-width:260px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.6);">
+                </div>
+
+                <div style="width:100%; max-width:420px; margin-bottom:40px; position:relative;">
+                    <input id="startCityInput"
+                           type="text"
+                           placeholder="Поиск по городу..."
+                           autocomplete="off"
+                           oninput="updateCitySuggestions()"
+                           style="
+                               width:100%;
+                               padding:14px 18px;
+                               border-radius:8px;
+                               border:2px solid #ffffff;
+                               background:rgba(0,0,0,0.75);
+                               color:#ffffff;
+                               font-size:16px;
+                               outline:none;
+                           ">
+                    <div id="citySuggestions" class="city-suggestions" style="display:none;"></div>
+                </div>
+            </div>
+
+            <button onclick="startNext()" 
+                    style="
+                        position:absolute;
+                        bottom:40px;
+                        right:40px;
+                        padding:12px 30px;
+                        border-radius:25px;
+                        border:2px solid #ffffff;
+                        background:linear-gradient(135deg,#ff7a00,#ff3b00);
+                        color:#ffffff;
+                        font-size:18px;
+                        font-weight:bold;
+                        cursor:pointer;
+                        box-shadow:0 6px 18px rgba(0,0,0,0.4);
+                    ">
+                Далее
+            </button>
+        </div>
+    </div>
+
+    <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
+    <div class="container">
+
+        <!-- ГЛАВНЫЙ ЭКРАН С КАТЕГОРИЯМИ -->
+        <div id="mainScreen" class="screen">
+            <div class="header" style="background:linear-gradient(135deg,#ff7a00,#ff3b00);">
+                <button class="back-btn" onclick="goBackToStart()">←</button>
+                <h1 style="font-size:20px;">ТЕЛЕФОНЫ</h1>
+                <p id="currentCityTitle">г. Усть-Катав</p>
+            </div>
+
+            <div style="
+                background:#000;
+                min-height:100vh;
+                padding:16px 12px 24px;
+            ">
+                <div id="categoryButtons" style="max-height:50vh; overflow-y:auto; padding-right:4px;">
+                    <!-- категории из JS -->
+                </div>
+
+                <div style="margin-top:16px; background:rgba(0,0,0,0.7); padding:12px; border-radius:16px;">
+                    <div class="search-box" style="padding:0 0 8px 0;">
+                        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск по выбранному городу...">
+                    </div>
+                    <div class="list" id="mainListContainer"></div>
+                    <div style="padding-top:10px;">
+                        <div class="buttons-row">
+                            <button class="btn btn-primary" onclick="showProfileScreen()">➕ Добавить услугу</button>
+                            <button class="btn btn-success" onclick="openAdmin()">🛠 Админ</button>
+                            <button class="btn btn-feedback" onclick="showFeedbackScreen()">💬 Обратная связь</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ЭКРАН КАТЕГОРИИ -->
+        <div id="categoryScreen" class="screen">
+            <div class="header" style="background:linear-gradient(135deg,#ff7a00,#ff3b00);">
+                <button class="back-btn" onclick="showMainScreen()">←</button>
+                <h1 id="categoryTitle" style="font-size:20px;">КАТЕГОРИЯ</h1>
+                <p>Справочник</p>
+            </div>
+
+            <div style="
+                background:#000;
+                min-height:100vh;
+                padding:16px 12px 24px;
+            ">
+                <div class="search-box" style="padding:0 0 16px;">
+                    <input type="text" id="categorySearchInput" class="search-input" placeholder="🔍 Поиск по категории...">
+                </div>
+                <div class="list" id="categoryListContainer">
+                    <div class="no-results">Нет услуг в этой категории</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ДОБАВЛЕНИЕ УСЛУГИ -->
+        <div id="profileScreen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showMainScreen()">←</button>
+                <h1>Добавить услугу</h1>
+                <p>Публикация на 30 дней</p>
+            </div>
+            <div style="padding: 20px; background:#fff;">
+                <input type="text" id="profName" placeholder="Название (ваше имя или фирма)">
+                <select id="profCategory" style="width:100%; padding:10px; margin-bottom:10px; border:2px solid #e1e5e9; border-radius:8px;">
+                    <option value="">Выберите категорию</option>
+                </select>
+                <input type="text" id="profCity" placeholder="Город">
+                <input type="tel" id="profPhone" placeholder="📞 Телефон (8-9xx-xxx-xx-xx)">
+                <input type="url" id="profSite" placeholder="🌐 Сайт или соцсеть (https://...)">
+                <textarea id="profDescription" rows="3" placeholder="Описание (когда работаете, особенности...)"></textarea>
+                <button class="btn btn-primary" style="width:100%; padding:12px; font-size:15px;" onclick="profileNext()">Опубликовать за 100₽ (30 дней)</button>
+            </div>
+        </div>
+
+        <!-- АДМИНКА -->
+        <div id="adminScreen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showMainScreen()">←</button>
+                <h1>Админ-панель</h1>
+                <p>Управление услугами</p>
+            </div>
+            <div style="padding: 20px; background:#fff;">
+
+                <!-- ВХОД АДМИНА -->
+                <div id="adminPassword" style="text-align:center; padding:20px;">
+                    <input type="text" id="adminLogin" placeholder="Логин" style="width:200px; padding:10px; font-size:14px; text-align:center; margin-bottom:8px;"><br>
+                    <input type="password" id="adminPassInput" placeholder="Пароль" style="width:200px; padding:10px; font-size:14px; text-align:center;"><br><br>
+                    <button class="btn btn-primary" onclick="checkAdmin()">Войти</button>
+                </div>
+
+                <div id="adminContent" style="display:none;">
+
+                    <!-- ПАПКА: КАТЕГОРИИ (ТОЛЬКО ДЛЯ СУПЕР-АДМИНА) -->
+                    <div id="adminCategoriesBlock" class="admin-section">
+                        <button class="admin-section-title" onclick="toggleAdminSection('cats')">🗂 Категории</button>
+                        <div class="admin-section-body" id="adminSection-cats">
+                            <div style="margin-bottom:8px;">
+                                <input type="text" id="newCategoryName" placeholder="Новая категория">
+                                <button class="btn btn-success" style="width:100%; margin-top:6px;" onclick="addCategory()">➕ Добавить категорию</button>
+                            </div>
+                            <div id="adminCategoriesList" style="margin-bottom:4px;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ПАПКА: СОЗДАНИЕ УСЛУГ (С ПОИСКОМ) -->
+                    <div class="admin-section">
+                        <button class="admin-section-title" onclick="toggleAdminSection('services')">📝 Создание услуг</button>
+                        <div class="admin-section-body" id="adminSection-services">
+                            <input type="text" id="adminName" placeholder="Название">
+                            <select id="adminCategory" style="width:100%; padding:10px; margin-bottom:10px; border:2px solid #e1e5e9; border-radius:8px;">
+                                <option value="">Категория</option>
+                            </select>
+                            <input type="text" id="adminCity" placeholder="Город">
+                            <input type="tel" id="adminPhone" placeholder="Телефон">
+                            <input type="url" id="adminSite" placeholder="Сайт">
+                            <textarea id="adminDescription" rows="2" placeholder="Описание"></textarea>
+
+                            <div class="days-select">
+                                <label style="display:block; margin-bottom:4px; font-weight:bold;">📅 Срок публикации:</label>
+                                <select id="adminDays" style="width:100%; padding:8px; border:2px solid #e1e5e9; border-radius:8px; font-size:14px;">
+                                    <option value="7">7 дней (тест)</option>
+                                    <option value="30" selected>30 дней (стандарт)</option>
+                                    <option value="90">90 дней (3 месяца)</option>
+                                    <option value="365">365 дней (год)</option>
+                                    <option value="0">Бессрочно (админ)</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-success" style="width:100%; margin-bottom:10px;" onclick="createAdminService()">➕ Создать услугу</button>
+                            
+                            <!-- ПОИСК В АДМИНКЕ -->
+                            <div style="background:rgba(248,249,250,0.5); padding:12px; border-radius:8px; margin-bottom:10px;">
+                                <input type="text" id="adminSearchInput" class="search-input" 
+                                       placeholder="🔍 Поиск услуг (имя, категория, город, телефон, описание...)" 
+                                       style="width:100%; padding:10px 16px; font-size:14px; border:2px solid #e1e5e9; border-radius:20px;"
+                                       oninput="filterAdminList()">
+                            </div>
+                            
+                            <h3 style="margin-bottom:6px; color:#2c3e50; font-size:15px;">📋 Все услуги</h3>
+                            <div id="adminList" style="max-height:300px; overflow-y:auto;"></div>
+                        </div>
+                    </div>
+
+                    <!-- ПАПКА: ОТЗЫВЫ/ПРЕДЛОЖЕНИЯ -->
+                    <div class="admin-section">
+                        <button class="admin-section-title" onclick="toggleAdminSection('feedback')">📨 Жалобы и предложения</button>
+                        <div class="admin-section-body" id="adminSection-feedback">
+                            <div id="adminFeedbackList"></div>
+                        </div>
+                    </div>
+
+                    <!-- ПАПКА: ЧАТ АДМИНОВ -->
+                    <div class="admin-section">
+                        <button class="admin-section-title" onclick="toggleAdminSection('chat')">💬 Чат админов</button>
+                        <div class="admin-section-body" id="adminSection-chat">
+                            <div id="adminChatMessages" style="max-height:200px; overflow-y:auto; margin-bottom:8px;"></div>
+                            <textarea id="adminChatInput" rows="2" placeholder="Сообщение для других админов..."></textarea>
+                            <button class="btn btn-primary" style="width:100%;" onclick="sendAdminChat()">Отправить</button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ОБРАТНАЯ СВЯЗЬ -->
+        <div id="feedbackScreen" class="screen">
+            <div class="header">
+                <button class="back-btn" onclick="showMainScreen()">←</button>
+                <h1>Обратная связь</h1>
+            </div>
+            <div style="padding: 20px; background:#fff;">
+                <textarea id="feedbackText" rows="5" placeholder="Предложение по улучшению или сообщение об ошибке..."></textarea>
+                <input type="tel" id="feedbackPhone" placeholder="📞 Ваш телефон (опционально)">
+                <button class="btn btn-feedback" style="width:100%; padding:12px;" onclick="sendFeedback()">Отправить</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        let data = [];
+        let currentCity = 'Усть-Катав';
+        let adminMode = false;
+        let feedbackData = [];
+        let currentCategoryForSearch = 'all';
+        let adminSearchTerm = ''; // НОВОЕ: поиск в админке
+
+        // роли админов
+        let admins = [];
+        let currentAdmin = null; // {login, role, city}
+
+        // массив категорий
+        let categories = [];
+
+        const defaultCategories = [
+            'Такси',
+            'Сантехник',
+            'Электрик',
+            'Артисты',
+            'Грузоперевозки',
+            'Юрист',
+            'IT специалист',
+            'Авторемонт',
+            'Пилорама',
+            'Товары от местных'
+        ];
+
+        const cities = [
+            'Усть-Катав','Юрюзань','Катав-Ивановск','Трёхгорный','Аша',
+            'Сим','Миасс','Златоуст','Челябинск','Уфа','Магнитогорск','Кыштым'
+        ];
+
+        // чат админов
+        let adminChat = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAdmins();
+            loadCategories();
+            renderCategoryButtons();
+            renderCategorySelects();
+            loadData();
+            loadFeedback();
+            loadAdminChat();
+            setupSearch();
+        });
+
+        /* ==== АДМИНЫ ==== */
+        function loadAdmins(){
+            const saved = localStorage.getItem('ustKatavAdmins');
+            if (saved){
+                admins = JSON.parse(saved);
+            } else {
+                admins = [
+                    {login:'super', pass:'1111', role:'super', city:'ALL'},
+                    {login:'ust',   pass:'2222', role:'city',  city:'Усть-Катав'}
+                ];
+                localStorage.setItem('ustKatavAdmins', JSON.stringify(admins));
+            }
+        }
+
+        /* ==== КАТЕГОРИИ ==== */
+        function loadCategories(){
+            const saved = localStorage.getItem('ustKatavCategories');
+            categories = saved ? JSON.parse(saved) : defaultCategories.slice();
+            localStorage.setItem('ustKatavCategories', JSON.stringify(categories));
+        }
+
+        function saveCategories(){
+            localStorage.setItem('ustKatavCategories', JSON.stringify(categories));
+        }
+
+        function renderCategoryButtons(){
+            const wrap = document.getElementById('categoryButtons');
+            wrap.innerHTML = categories.map(cat => `
+                <button class="category-big" onclick="openCategory('${cat}')">
+                    ${cat.toUpperCase()}
+                </button>
+            `).join('');
+        }
+
+        function renderCategorySelects(){
+            const profSel = document.getElementById('profCategory');
+            const adminSel = document.getElementById('adminCategory');
+
+            const options = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+
+            if (profSel){
+                profSel.innerHTML = '<option value="">Выберите категорию</option>' + options;
+            }
+            if (adminSel){
+                adminSel.innerHTML = '<option value="">Категория</option>' + options;
+            }
+
+            renderAdminCategoriesList();
+        }
+
+        function renderAdminCategoriesList(){
+            const box = document.getElementById('adminCategoriesList');
+            if(!box) return;
+
+            if (!categories.length){
+                box.innerHTML = '<div style="font-size:13px;color:#7f8c8d;">Категорий нет</div>';
+                return;
+            }
+
+            box.innerHTML = categories.map((cat, index) => `
+                <div class="category-pill">
+                    <span>${cat}</span>
+                    <div style="display:flex; gap:4px;">
+                        <button class="btn btn-success" style="padding:4px 8px;font-size:11px;"
+                                onclick="renameCategory(${index})">✏ Переименовать</button>
+                        <button class="btn btn-danger" style="padding:4px 8px;font-size:11px;"
+                                onclick="deleteCategory(${index})">🗑 Удалить</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addCategory(){
+            const input = document.getElementById('newCategoryName');
+            const name = (input.value || '').trim();
+            if(!name){
+                alert('Введите название категории');
+                return;
+            }
+            if (categories.includes(name)){
+                alert('Такая категория уже есть');
+                return;
+            }
+            categories.push(name);
+            saveCategories();
+            input.value = '';
+            renderCategoryButtons();
+            renderCategorySelects();
+        }
+
+        function deleteCategory(index){
+            const name = categories[index];
+            if(!confirm(`Удалить категорию "${name}"?\nУслуги в этой категории останутся, но выбирать её будет нельзя.`)){
+                return;
+            }
+            categories.splice(index,1);
+            saveCategories();
+            renderCategoryButtons();
+            renderCategorySelects();
+        }
+
+        function renameCategory(index){
+            const oldName = categories[index];
+            const newName = prompt('Новое название категории:', oldName);
+            if (newName === null) return;
+
+            const trimmed = newName.trim();
+            if (!trimmed){
+                alert('Название не может быть пустым');
+                return;
+            }
+            if (categories.includes(trimmed)){
+                alert('Такая категория уже есть');
+                return;
+            }
+
+            categories[index] = trimmed;
+            saveCategories();
+            renderCategoryButtons();
+            renderCategorySelects();
+
+            data = data.map(item => {
+                if (item.category === oldName){
+                    return {...item, category: trimmed};
+                }
+                return item;
+            });
+            saveData();
+            if (adminMode) renderAdminList();
+        }
+
+        /* ==== ПОИСК ==== */
+        function setupSearch() {
+            document.getElementById('searchInput').addEventListener('input', function(){
+                const search = this.value.toLowerCase();
+                filterListBy('all', search, 'mainListContainer');
+            });
+
+            document.getElementById('categorySearchInput').addEventListener('input', function(){
+                const search = this.value.toLowerCase();
+                filterListBy(currentCategoryForSearch, search, 'categoryListContainer');
+            });
+        }
+
+        function updateCityTitle() {
+            document.getElementById('currentCityTitle').textContent = 'Услуги и товары: ' + currentCity;
+        }
+
+        /* ==== ГОРОДА НА СТАРТЕ ==== */
+        function updateCitySuggestions() {
+            const input = document.getElementById('startCityInput');
+            const box = document.getElementById('citySuggestions');
+            const value = input.value.trim().toLowerCase();
+
+            if (!value) {
+                box.style.display = 'none';
+                box.innerHTML = '';
+                return;
+            }
+
+            const filtered = cities.filter(c => c.toLowerCase().includes(value));
+            if (!filtered.length) {
+                box.style.display = 'none';
+                box.innerHTML = '';
+                return;
+            }
+
+            box.innerHTML = filtered.map(c => 
+                `<div class="city-suggestion-item" onclick="chooseCity('${c}')">${c}</div>`
+            ).join('');
+            box.style.display = 'block';
+        }
+
+        function chooseCity(name) {
+            document.getElementById('startCityInput').value = name;
+            document.getElementById('citySuggestions').style.display = 'none';
+        }
+
+        function startNext() {
+            const cityInput = document.getElementById('startCityInput').value.trim();
+            currentCity = cityInput || 'Усть-Катав';
+            updateCityTitle();
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('mainScreen').classList.add('active');
+        }
+
+        function goBackToStart() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('startScreen').classList.add('active');
+        }
+
+        /* ==== ДАННЫЕ УСЛУГ ==== */
+        function loadData() {
+            const saved = localStorage.getItem('ustKatavData');
+            data = saved ? JSON.parse(saved) : [
+                {name: "🚕 Такси ФОРТУНА", category: "Такси", city: "Усть-Катав", phone: "8-919-000-00-00", site: "", description: "Круглосуточное такси по городу и району", status: "active", expires: new Date().getTime() + 30*24*60*60*1000},
+                {name: "🔧 Сантехник Артём", category: "Сантехник", city: "Усть-Катав", phone: "8-919-000-00-01", site: "", description: "Работаю в свободное от работы время", status: "active", expires: new Date().getTime() + 30*24*60*60*1000},
+                {name: "⚡ Электрик Сергей", category: "Электрик", city: "Усть-Катав", phone: "8-919-000-00-02", site: "", description: "Монтаж, ремонт, выезд", status: "active", expires: new Date().getTime() + 30*24*60*60*1000},
+                {name: "🛒 Мёд от Андрея", category: "Товары от местных", city: "Усть-Катав", phone: "8-919-000-00-03", site: "https://vk.com/med_andreya", description: "Домашний мёд, возможна доставка по городу", status: "active", expires: new Date().getTime() + 30*24*60*60*1000}
+            ];
+            
+            const now = new Date().getTime();
+            data = data.map(item => {
+                if (!item.status) item.status = 'active';
+                if (item.expires && item.expires < now && item.status === 'active') item.status = 'expired';
+                return item;
+            });
+            saveData();
+            
+            updateCityTitle();
+            filterListBy('all','', 'mainListContainer');
+        }
+
+        function saveData(){ localStorage.setItem('ustKatavData', JSON.stringify(data)); }
+
+        function filterListBy(category, search, containerId){
+            const container = document.getElementById(containerId);
+
+            let filtered = data.filter(item =>
+                (adminMode || item.status === 'active') &&
+                item.city.toLowerCase().includes(currentCity.toLowerCase()) &&
+                (category === 'all' || item.category === category) &&
+                (!search ||
+                 item.name.toLowerCase().includes(search) ||
+                 item.category.toLowerCase().includes(search) ||
+                 item.description.toLowerCase().includes(search))
+            );
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="no-results">' +
+                    (search ? 'Ничего не найдено' :
+                     (containerId === 'mainListContainer' ? '' : 'Нет услуг в этой категории')) +
+                    '</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const parts = item.name.split(' ');
+                const main = parts[0] || '';
+                const sub = parts.slice(1).join(' ') || '';
+                const phoneClean = item.phone.replace(/[^0-9]/g,'');
+                return `
+                <div class="card">
+                    <div class="card-content">
+                        <div class="card-title-main">${main.toUpperCase()}</div>
+                        ${sub ? `<div class="card-title-sub">${sub}</div>` : ''}
+                        <div class="card-city">${'г.' + item.city.toUpperCase()}</div>
+                        <div class="card-phone">т.${item.phone}</div>
+                    </div>
+                    <div class="card-actions">
+                        ${item.site ? `<a href="${item.site}" target="_blank" class="btn-circle btn-site-circle"><span>🌐</span></a>` : ''}
+                        <a href="tel:${phoneClean}" class="btn-circle btn-call-circle"><span>📞</span></a>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openCategory(cat){
+            currentCategoryForSearch = cat;
+            document.getElementById('categoryTitle').textContent = cat.toUpperCase();
+            document.getElementById('categorySearchInput').value = '';
+            document.getElementById('searchInput').value = '';
+
+            filterListBy(cat, '', 'categoryListContainer');
+            filterListBy(cat, '', 'mainListContainer');
+
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('categoryScreen').classList.add('active');
+        }
+
+        function showMainScreen(){
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('mainScreen').classList.add('active');
+            adminMode = false;
+            currentAdmin = null;
+            document.getElementById('searchInput').value = '';
+            filterListBy('all', '', 'mainListContainer');
+        }
+
+        /* ==== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==== */
+        function showProfileScreen(){
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('profileScreen').classList.add('active');
+            document.getElementById('profCity').value = currentCity;
+        }
+
+        function profileNext(){
+            const name = document.getElementById('profName').value.trim();
+            const category = document.getElementById('profCategory').value;
+            const phone = document.getElementById('profPhone').value.trim();
+            
+            if(!name || !category || !phone){
+                alert('Заполните название, категорию и телефон');
+                return;
+            }
+            
+            const service = {
+                name: name,
+                category: category,
+                city: document.getElementById('profCity').value.trim() || currentCity,
+                phone: phone,
+                site: document.getElementById('profSite').value.trim(),
+                description: document.getElementById('profDescription').value.trim(),
+                status: 'active',
+                expires: new Date().getTime() + 30*24*60*60*1000
+            };
+            
+            data.unshift(service);
+            saveData();
+            showMainScreen();
+            alert('✅ Услуга добавлена на 30 дней!');
+            
+            document.getElementById('profName').value = '';
+            document.getElementById('profCategory').value = '';
+            document.getElementById('profCity').value = '';
+            document.getElementById('profPhone').value = '';
+            document.getElementById('profSite').value = '';
+            document.getElementById('profDescription').value = '';
+        }
+
+        /* ==== АДМИНКА ==== */
+        function openAdmin(){
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('adminScreen').classList.add('active');
+            document.getElementById('adminPassword').style.display = 'block';
+            document.getElementById('adminContent').style.display = 'none';
+        }
+
+        function toggleAdminSection(key){
+            const el = document.getElementById('adminSection-' + key);
+            if (!el) return;
+            el.classList.toggle('active');
+        }
+
+        function checkAdmin(){
+            const login = document.getElementById('adminLogin').value.trim();
+            const pass  = document.getElementById('adminPassInput').value.trim();
+            loadAdmins();
+            const found = admins.find(a => a.login === login && a.pass === pass);
+            if (!found){
+                alert('❌ Неверный логин или пароль');
+                return;
+            }
+            currentAdmin = found;
+            adminMode = true;
+
+            if (currentAdmin.role === 'city'){
+                currentCity = currentAdmin.city;
+                updateCityTitle();
+            }
+
+            document.getElementById('adminPassword').style.display = 'none';
+            document.getElementById('adminContent').style.display = 'block';
+
+            document.getElementById('adminCategoriesBlock').style.display =
+                currentAdmin.role === 'super' ? 'block' : 'none';
+
+            renderAdminCategoriesList();
+            renderAdminList();
+            renderFeedbackForAdmin();
+            renderAdminChat();
+            
+            // ОЧИСТКА ПОИСКА ПРИ ВХОДЕ
+            document.getElementById('adminSearchInput').value = '';
+            adminSearchTerm = '';
+        }
+
+        // НОВЫЕ ФУНКЦИИ ПОИСКА В АДМИНКЕ
+        function filterAdminList() {
+            const searchTerm = document.getElementById('adminSearchInput').value.toLowerCase();
+            adminSearchTerm = searchTerm;
+            renderAdminList();
+        }
+
+        function renderAdminList() {
+            const adminList = document.getElementById('adminList');
+            if(!data.length) {
+                adminList.innerHTML = '<div style="text-align:center;padding:20px;color:#6c757d">Услуг нет</div>';
+                return;
+            }
+            
+            const now = new Date().getTime();
+            let visible = data;
+            
+            // Фильтр по городу для city-админа
+            if (currentAdmin && currentAdmin.role === 'city') {
+                visible = data.filter(item => item.city === currentAdmin.city);
+            }
+            
+            // ПОИСК ПО ВСЕМ ПОЛЯМ
+            if (adminSearchTerm) {
+                visible = visible.filter(item =>
+                    item.name.toLowerCase().includes(adminSearchTerm) ||
+                    item.category.toLowerCase().includes(adminSearchTerm) ||
+                    item.city.toLowerCase().includes(adminSearchTerm) ||
+                    item.phone.includes(adminSearchTerm) ||
+                    (item.description && item.description.toLowerCase().includes(adminSearchTerm))
+                );
+            }
+            
+            if (!visible.length) {
+                adminList.innerHTML = '<div style="text-align:center;padding:20px;color:#6c757d">' + 
+                                     (adminSearchTerm ? 'Ничего не найдено' : 'Услуг нет') + 
+                                     '</div>';
+                return;
+            }
+            
+            adminList.innerHTML = visible.map(item => {
+                const realIndex = data.indexOf(item);
+                let statusText;
+                if (item.expires === null) {
+                    statusText = '∞ (админ)';
+                } else {
+                    const daysLeft = Math.ceil((item.expires - now) / (24*60*60*1000));
+                    statusText = item.status === 'active' ? `${daysLeft} дн.` : 'Истёк';
+                }
+                
+                return `
+                <div class="admin-item">
+                    <div style="display:flex; justify-content:space-between; align-items:start;">
+                        <div style="flex:1">
+                            <strong>${item.name}</strong><br>
+                            <small>${item.category} | ${item.city} | ${item.phone}</small>
+                            ${item.site ? '<br><small>🌐 ' + item.site + '</small>' : ''}
+                            ${item.description ? '<br><small>' + item.description + '</small>' : ''}
+                            <br><span class="${item.status === 'active' ? 'status-active' : 'status-expired'}">${statusText}</span>
+                        </div>
+                        <div style="white-space:nowrap; margin-left:10px;">
+                            <button class="btn btn-success" onclick="moveToTop(${realIndex})" 
+                                    style="margin-bottom:4px;font-size:11px;padding:6px 10px">⬆ В топ</button><br>
+                            <button class="btn btn-danger" onclick="deleteItem(${realIndex})" 
+                                    style="font-size:11px;padding:6px 10px">🗑 Удалить</button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function createAdminService(){
+            const name = document.getElementById('adminName').value.trim();
+            const category = document.getElementById('adminCategory').value;
+            const phone = document.getElementById('adminPhone').value.trim();
+            
+            if(!name || !category || !phone){
+                alert('Заполните основные поля');
+                return;
+            }
+            
+            const days = parseInt(document.getElementById('adminDays').value);
+
+            let cityValue = document.getElementById('adminCity').value.trim();
+            if (currentAdmin && currentAdmin.role === 'city') cityValue = currentAdmin.city;
+
+            const service = {
+                name: name,
+                category: category,
+                city: cityValue || currentCity,
+                phone: phone,
+                site: document.getElementById('adminSite').value.trim(),
+                description: document.getElementById('adminDescription').value.trim(),
+                status: 'active',
+                expires: days === 0 ? null : new Date().getTime() + days*24*60*60*1000
+            };
+            data.unshift(service);
+            saveData();
+            renderAdminList();
+            alert(`✅ Услуга создана на ${days === 0 ? 'бесрочно' : days + ' дней'}!`);
+            
+            document.getElementById('adminName').value = '';
+            document.getElementById('adminCategory').value = '';
+            if (!currentAdmin || currentAdmin.role !== 'city') document.getElementById('adminCity').value = '';
+            document.getElementById('adminPhone').value = '';
+            document.getElementById('adminSite').value = '';
+            document.getElementById('adminDescription').value = '';
+            document.getElementById('adminDays').value = '30';
+        }
+
+        function moveToTop(i){
+            const item = data[i];
+            if (currentAdmin && currentAdmin.role === 'city' && item.city !== currentAdmin.city) {
+                alert('Нет прав на редактирование услуг других городов');
+                return;
+            }
+            data.splice(i, 1);
+            data.unshift(item);
+            saveData();
+            renderAdminList();
+            filterListBy('all', '', 'mainListContainer');
+        }
+
+        function deleteItem(i){
+            const item = data[i];
+            if (currentAdmin && currentAdmin.role === 'city' && item.city !== currentAdmin.city) {
+                alert('Нет прав на удаление услуг других городов');
+                return;
+            }
+            if(!confirm(`Удалить услугу "${item.name}"?`)) return;
+            data.splice(i, 1);
+            saveData();
+            renderAdminList();
+            filterListBy('all', '', 'mainListContainer');
+        }
+
+        /* ==== ОБРАТНАЯ СВЯЗЬ ==== */
+        function loadFeedback() {
+            const fb = localStorage.getItem('ustKatavFeedback');
+            feedbackData = fb ? JSON.parse(fb) : [];
+        }
+
+        function saveFeedback() {
+            localStorage.setItem('ustKatavFeedback', JSON.stringify(feedbackData));
+        }
+
+        function showFeedbackScreen() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('feedbackScreen').classList.add('active');
+        }
+
+        function sendFeedback() {
+            const text = document.getElementById('feedbackText').value.trim();
+            const phone = document.getElementById('feedbackPhone').value.trim();
+            if(!text) {
+                alert('Введите сообщение');
+                return;
+            }
+            feedbackData.unshift({
+                id: Date.now(),
+                text: text,
+                phone: phone || 'не указан',
+                city: currentCity,
+                date: new Date().toLocaleString('ru-RU')
+            });
+            saveFeedback();
+            alert('✅ Сообщение отправлено!');
+            showMainScreen();
+            document.getElementById('feedbackText').value = '';
+            document.getElementById('feedbackPhone').value = '';
+            if (adminMode) renderFeedbackForAdmin();
+        }
+
+        function getVisibleFeedback() {
+            if (currentAdmin && currentAdmin.role === 'super') return feedbackData;
+            if (currentAdmin && currentAdmin.role === 'city') return feedbackData.filter(item => item.city === currentAdmin.city);
+            return [];
+        }
+
+        function renderFeedbackForAdmin() {
+            const box = document.getElementById('adminFeedbackList');
+            if (!box) return;
+            const items = getVisibleFeedback();
+            if (!items.length) {
+                box.innerHTML = '<div style="font-size:13px;color:#7f8c8d;">Сообщений нет</div>';
+                return;
+            }
+            box.innerHTML = items.map(item => 
+                `<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:13px">
+                    <strong>${item.city}</strong> <small>${item.date}</small><br>
+                    <small>📞 ${item.phone}</small><br>
+                    <div>${item.text}</div>
+                </div>`
+            ).join('');
+        }
+
+        /* ==== ЧАТ АДМИНОВ ==== */
+        function loadAdminChat() {
+            const saved = localStorage.getItem('ustKatavAdminChat');
+            adminChat = saved ? JSON.parse(saved) : [];
+        }
+
+        function saveAdminChat() {
+            localStorage.setItem('ustKatavAdminChat', JSON.stringify(adminChat));
+        }
+
+        function getVisibleChat() {
+            if (currentAdmin && currentAdmin.role === 'super') return adminChat;
+            if (currentAdmin && currentAdmin.role === 'city') return adminChat.filter(m => m.city === 'ALL' || m.city === currentAdmin.city);
+            return [];
+        }
+
+        function renderAdminChat() {
+            const box = document.getElementById('adminChatMessages');
+            if (!box) return;
+            const items = getVisibleChat();
+            if (!items.length) {
+                box.innerHTML = '<div style="font-size:13px;color:#7f8c8d;">Сообщений нет</div>';
+                return;
+            }
+            box.innerHTML = items.map(msg => 
+                `<div style="background:#fff;border-radius:8px;padding:6px 8px;margin-bottom:4px;font-size:12px">
+                    <strong>${msg.from}</strong> <small>${msg.city}</small> <small>${msg.time}</small><br>
+                    <div>${msg.text}</div>
+                </div>`
+            ).join('');
+        }
+
+        function sendAdminChat() {
+            if (!currentAdmin) {
+                alert('Требуется вход в админку');
+                return;
+            }
+            const input = document.getElementById('adminChatInput');
+            const text = input.value.trim();
+            if (!text) {
+                alert('Введите сообщение');
+                return;
+            }
+            adminChat.push({
+                id: Date.now(),
+                from: currentAdmin.login,
+                city: currentAdmin.role === 'super' ? 'ALL' : currentAdmin.city,
+                text: text,
+                time: new Date().toLocaleString('ru-RU')
+            });
+            saveAdminChat();
+            input.value = '';
+            renderAdminChat();
+        }
+    </script>
+</body>
+</html>
