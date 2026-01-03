@@ -272,6 +272,26 @@
         }
         .admin-section-body.active { display:block; }
     </style>
+<script>
+// Автоматическое версионирование всех скриптов и стилей
+document.addEventListener('DOMContentLoaded', function() {
+    // Для всех script тегов
+    document.querySelectorAll('script[src]').forEach(function(script) {
+        var src = script.getAttribute('src');
+        if (src.indexOf('?') === -1) { // Если нет параметров
+            script.src = src + '?v=' + Date.now();
+        }
+    });
+    
+    // Для всех link[rel=stylesheet] тегов
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(function(link) {
+        var href = link.getAttribute('href');
+        if (href && href.indexOf('?') === -1) {
+            link.href = href + '?v=' + Date.now();
+        }
+    });
+});
+</script>
 </head>
 <body>
 
