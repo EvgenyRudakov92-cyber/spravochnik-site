@@ -3,18 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Телефонный справочник</title>
+    <title>Справочник.Ру</title>
     <meta name="theme-color" content="#ff6b00">
     <style>
+        /* Все предыдущие стили остаются без изменений */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #000; min-height: 100vh; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            background: #000; 
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-        .container { max-width: 600px; margin: 0 auto; background: rgba(255,255,255,0.0); border-radius: 20px 20px 0 0; box-shadow: 0 20px 40px rgba(0,0,0,0.3); overflow: hidden; }
+        .screen { 
+            display: none; 
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+        }
+        .screen.active { 
+            display: block; 
+        }
 
-        .header { background: linear-gradient(135deg, #ff6b00, #b33939); color: white; padding: 16px 20px; text-align: center; position: relative; }
+        /* КОНТЕЙНЕРЫ */
+        .main-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.0);
+            overflow: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ШАПКА */
+        .header { 
+            background: linear-gradient(135deg, #ff6b00, #b33939); 
+            color: white; 
+            padding: 16px 20px; 
+            text-align: center; 
+            position: relative; 
+            flex-shrink: 0;
+        }
         .header h1 { font-size: 18px; margin-bottom: 4px; letter-spacing: 1px; }
         .header p { font-size: 12px; opacity: 0.9; }
 
+        /* КНОПКА НАЗАД */
         .back-btn {
             position: absolute;
             left: 16px;
@@ -31,66 +65,150 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
+            z-index: 10;
         }
 
+        /* ПОИСК */
         .search-box { padding: 16px 20px; background: transparent; }
-        .search-input { width: 100%; padding: 10px 16px; font-size: 15px; border: 2px solid #e1e5e9; border-radius: 30px; outline: none; transition: all 0.3s; }
+        .search-input { 
+            width: 100%; 
+            padding: 12px 18px; 
+            font-size: 15px; 
+            border: 2px solid #e1e5e9; 
+            border-radius: 30px; 
+            outline: none; 
+            transition: all 0.3s; 
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
         .search-input:focus { border-color: #ff6b00; box-shadow: 0 0 0 3px rgba(255,107,0,0.15); }
+        .search-input::placeholder { color: rgba(255,255,255,0.6); }
 
-        .list { padding: 0 12px 12px; max-height: 40vh; overflow-y: auto; background:transparent; }
-        .no-results { text-align: center; padding: 20px 12px; color: #f1f2f6; font-size: 15px; }
+        /* СПИСОК */
+        .list { 
+            flex: 1;
+            padding: 0 12px 12px; 
+            overflow-y: auto; 
+            background:transparent; 
+        }
+        .no-results { 
+            text-align: center; 
+            padding: 40px 12px; 
+            color: #f1f2f6; 
+            font-size: 15px; 
+        }
 
-        /* КАРТОЧКА */
+        /* КАРТОЧКА УСЛУГИ */
         .card {
             position: relative;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
+            align-items: flex-start;
             background: #000000;
-            border-radius: 30px;
-            padding: 18px 20px;
+            border-radius: 20px;
+            padding: 16px;
             margin: 12px 0;
             box-shadow: 0 0 0 1px rgba(255,255,255,0.08),
-                        0 16px 40px rgba(0,0,0,0.9);
+                        0 12px 30px rgba(0,0,0,0.9);
             color: #ffffff;
             overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            flex-wrap: wrap;
         }
-        .card.premium-top {
-            background: linear-gradient(135deg, #1a1a1a, #ff6b00);
-            border: 2px solid gold;
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 0 2px rgba(255,255,255,0.15),
+                        0 20px 50px rgba(0,0,0,1);
         }
-        .card.premium-highlight {
-            background: linear-gradient(135deg, #003300, #00cc00);
-            border: 2px solid #00ff00;
+        
+        /* КАРТОЧКА ТОП - ЗОЛОТАЯ С АНИМАЦИЕЙ ПЕРЕЛИВА */
+        .card.top-card {
+            background: linear-gradient(135deg, 
+                #f7ef8a 0%,
+                #ffd700 25%,
+                #daa520 50%,
+                #ffd700 75%,
+                #f7ef8a 100%);
+            border: 3px solid #ffb300;
+            animation: goldShine 4s ease-in-out infinite alternate;
+            color: #000;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5),
+                        0 0 40px rgba(255, 215, 0, 0.3),
+                        0 0 60px rgba(255, 215, 0, 0.1),
+                        inset 0 0 20px rgba(255, 255, 255, 0.2);
         }
-        .card.premium-verified {
-            background: linear-gradient(135deg, #000033, #0066ff);
-            border: 2px solid #0066ff;
-            position: relative;
+        
+        /* АНИМАЦИЯ ПЕРЕЛИВА ЗОЛОТА */
+        @keyframes goldShine {
+            0% {
+                background: linear-gradient(135deg, 
+                    #f7ef8a 0%,
+                    #ffd700 25%,
+                    #daa520 50%,
+                    #ffd700 75%,
+                    #f7ef8a 100%);
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.5),
+                            0 0 40px rgba(255, 215, 0, 0.3),
+                            0 0 60px rgba(255, 215, 0, 0.1),
+                            inset 0 0 20px rgba(255, 255, 255, 0.2);
+            }
+            50% {
+                background: linear-gradient(135deg, 
+                    #ffd700 0%,
+                    #f7ef8a 25%,
+                    #ffd700 50%,
+                    #f7ef8a 75%,
+                    #ffd700 100%);
+                box-shadow: 0 0 25px rgba(255, 215, 0, 0.7),
+                            0 0 50px rgba(255, 215, 0, 0.5),
+                            0 0 75px rgba(255, 215, 0, 0.2),
+                            inset 0 0 25px rgba(255, 255, 255, 0.3);
+            }
+            100% {
+                background: linear-gradient(135deg, 
+                    #daa520 0%,
+                    #ffd700 25%,
+                    #f7ef8a 50%,
+                    #ffd700 75%,
+                    #daa520 100%);
+                box-shadow: 0 0 20px rgba(255, 215, 0, 0.5),
+                            0 0 40px rgba(255, 215, 0, 0.3),
+                            0 0 60px rgba(255, 215, 0, 0.1),
+                            inset 0 0 20px rgba(255, 255, 255, 0.2);
+            }
         }
-        .card.premium-verified::after {
-            content: "✅ ВЕРИФИЦИРОВАНО";
+        
+        /* МЕТКА ТОП НА КАРТОЧКЕ */
+        .top-label {
             position: absolute;
             top: 10px;
-            right: 10px;
-            background: #0066ff;
+            right: 75px;
+            background: linear-gradient(135deg, #ff9500, #ff3b00);
             color: white;
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 10px;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 11px;
             font-weight: bold;
+            z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            border: 2px solid #ffb300;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
         }
-        .card.premium-urgent {
-            background: linear-gradient(135deg, #330000, #ff0000);
-            border: 2px solid #ff4444;
-            animation: pulse 2s infinite;
+        
+        /* ИКОНКА ЗОЛОТОГО СЛИТКА */
+        .gold-icon {
+            display: inline-block;
+            animation: goldFloat 3s ease-in-out infinite;
+            font-size: 14px;
         }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        
+        @keyframes goldFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-3px) rotate(5deg); }
         }
-        .card::before {
+        
+        .card::after {
             content: "";
             position: absolute;
             inset: -40%;
@@ -101,7 +219,9 @@
         .card-content {
             position: relative;
             z-index: 1;
-            max-width: 65%;
+            flex: 1;
+            min-width: 0;
+            padding-right: 10px;
         }
         .card-title-main {
             font-size: 22px;
@@ -109,12 +229,14 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             margin-bottom: 4px;
+            line-height: 1.2;
         }
         .card-title-sub {
             font-size: 16px;
             font-weight: 500;
             font-style: italic;
             margin-bottom: 6px;
+            line-height: 1.2;
         }
         .card-city {
             font-size: 13px;
@@ -125,31 +247,59 @@
         .card-phone {
             font-size: 14px;
             font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .card-description {
+            font-size: 12px;
+            color: #cccccc;
+            margin-top: 8px;
+            line-height: 1.3;
+            max-height: 32px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+        
+        /* Для золотой карточки меняем цвет текста */
+        .card.top-card .card-title-main,
+        .card.top-card .card-title-sub,
+        .card.top-card .card-city,
+        .card.top-card .card-phone {
+            color: #000;
+            text-shadow: 0 1px 2px rgba(255,255,255,0.3);
+        }
+        
+        .card.top-card .card-description {
+            color: #333;
         }
 
+        /* КНОПКИ КАРТОЧКИ (справа) */
         .card-actions {
             position: relative;
             z-index: 1;
             display: flex;
-            flex-direction: row;
+            flex-direction: column;
             align-items: center;
             gap: 12px;
+            flex-shrink: 0;
         }
         .btn-circle {
-            width: 72px;
-            height: 72px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
             border: none;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 26px rgba(0,0,0,0.8);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.8);
             cursor: pointer;
             transition: transform 0.15s ease, box-shadow 0.15s ease;
             text-decoration: none;
         }
         .btn-circle span {
-            font-size: 34px;
+            font-size: 28px;
             color: #ffffff;
         }
         .btn-call-circle {
@@ -163,13 +313,13 @@
             box-shadow: 0 6px 16px rgba(0,0,0,0.9);
         }
 
-        /* КНОПКИ В СТИЛЕ «ДАЛЕЕ» */
+        /* ОСНОВНЫЕ КНОПКИ */
         .btn {
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 6px;
-            padding: 10px 22px;
+            padding: 10px 16px;
             border-radius: 25px;
             border: 2px solid #ffffff;
             font-size: 14px;
@@ -195,24 +345,28 @@
             background: linear-gradient(135deg,#ff7a00,#ff3b00);
             color:#ffffff;
         }
-        .btn-premium {
-            background: linear-gradient(135deg, #ffd700, #ff9500);
-            color: #000;
-            font-weight: bold;
-            border: 2px solid #ffd700;
-            font-size: 12px;
-            padding: 6px 12px;
+        .btn-telegram {
+            background: linear-gradient(135deg, #0088cc, #006699);
+            color: #ffffff;
+            border: 2px solid #0088cc;
         }
-        .btn-premium:hover {
-            background: linear-gradient(135deg, #ffed4e, #ffaa00);
-            transform: translateY(-2px);
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            color: #000000;
+            border: 2px solid #ff9800;
         }
+        .btn-danger { background: #e17055; color: white; }
+        .btn-danger:hover { background: #d63031; }
 
-        /* Ряд кнопок снизу */
+        /* РЯД КНОПОК */
         .buttons-row {
             display: flex;
             justify-content: space-between;
             gap: 8px;
+            padding: 12px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 16px;
+            margin-top: 8px;
         }
         .buttons-row .btn {
             flex: 1 1 0;
@@ -220,54 +374,11 @@
             font-size: 13px;
         }
 
-        .btn-danger { background: #e17055; color: white; }
-        .btn-danger:hover { background: #d63031; }
-
-        .screen { display: none; }
-        .screen.active { display: block; }
-
-        #adminScreen input, #adminScreen textarea,
-        #profileScreen input, #profileScreen textarea,
-        #feedbackScreen textarea {
-            width: 100%; padding: 10px; margin-bottom: 10px;
-            border: 2px solid #e1e5e9; border-radius: 8px; font-size: 14px;
-        }
-        #adminScreen input:focus, #profileScreen input:focus, #feedbackScreen textarea:focus {
-            border-color: #ff6b00; outline: none;
-        }
-        .admin-item { background: #f8f9fa; border-radius: 8px; padding: 10px; margin-bottom: 8px; font-size: 13px; }
-        .status-active { color: #27ae60; font-weight: bold; }
-        .status-expired { color: #e74c3c; font-weight: bold; }
-        .days-select { background:#f8f9fa; padding:8px; border-radius:8px; margin-bottom:10px; font-size:13px; }
-        .city-suggestions {
-            position:absolute;
-            top:100%;
-            left:50%;
-            transform:translateX(-50%);
-            width:100%;
-            max-width:420px;
-            background:rgba(0,0,0,0.85);
-            color:#fff;
-            border-radius:8px;
-            margin-top:6px;
-            max-height:140px;
-            overflow-y:auto;
-            font-size:14px;
-            z-index:3;
-        }
-        .city-suggestion-item{
-            padding:8px 12px;
-            border-bottom:1px solid rgba(255,255,255,0.1);
-            cursor:pointer;
-        }
-        .city-suggestion-item:hover{
-            background:rgba(255,255,255,0.08);
-        }
-
+        /* КАТЕГОРИИ НА ГЛАВНОМ ЭКРАНЕ */
         .category-big{
             width:100%;
-            margin:6px 0;
-            padding:10px 8px;
+            margin:8px 0;
+            padding:14px 12px;
             border-radius:28px;
             border:2px solid #ffffff;
             background:linear-gradient(135deg,#000000,#ff7a00);
@@ -277,31 +388,230 @@
             text-align:center;
             cursor:pointer;
             box-shadow:0 6px 14px rgba(0,0,0,0.5);
+            transition: transform 0.2s;
+        }
+        .category-big:hover {
+            transform: translateY(-2px);
         }
         .category-big:active{
             transform:scale(0.97);
         }
 
-        .category-pill{
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            padding:6px 10px;
-            margin-bottom:6px;
-            border-radius:16px;
-            background:#f1f2f6;
-            font-size:13px;
+        /* ПРИВЛЕКАТЕЛЬНЫЙ БЛОК СОГЛАСИЯ */
+        .consent-container {
+            background: linear-gradient(135deg, rgba(255,107,0,0.1), rgba(255,215,0,0.1));
+            border-radius: 20px;
+            padding: 25px;
+            margin: 25px 0;
+            border: 2px solid #ffb300;
+            box-shadow: 0 10px 30px rgba(255,107,0,0.2);
+            position: relative;
+            overflow: hidden;
         }
-        .category-pill span{
-            flex:1;
+        
+        .consent-container::before {
+            content: "⚠️";
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 24px;
+            opacity: 0.3;
+        }
+        
+        .consent-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .consent-icon {
+            font-size: 32px;
+            background: linear-gradient(135deg, #ff6b00, #ffd700);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            box-shadow: 0 4px 15px rgba(255,107,0,0.4);
+        }
+        
+        .consent-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff6b00;
+            margin: 0;
+        }
+        
+        .consent-checkbox {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 15px;
+            border: 2px solid #ffd700;
+            transition: all 0.3s;
+        }
+        
+        .consent-checkbox:hover {
+            border-color: #ff6b00;
+            box-shadow: 0 0 15px rgba(255,107,0,0.2);
+        }
+        
+        .consent-checkbox input[type="checkbox"] {
+            width: 26px;
+            height: 26px;
+            min-width: 26px;
+            margin-top: 3px;
+            accent-color: #ff6b00;
+            cursor: pointer;
+            transform: scale(1.2);
+        }
+        
+        .consent-checkbox label {
+            font-size: 16px;
+            color: #333;
+            line-height: 1.5;
+            cursor: pointer;
+            flex: 1;
+            font-weight: 500;
+        }
+        
+        .consent-links {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,107,0,0.2);
+        }
+        
+        .consent-link-btn {
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #0088cc, #005fa3);
+            color: white;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 14px;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .consent-link-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,136,204,0.4);
+            border-color: #00aaff;
+        }
+        
+        .consent-link-btn.secondary {
+            background: linear-gradient(135deg, #27ae60, #219653);
+        }
+        
+        .consent-link-btn.secondary:hover {
+            box-shadow: 0 8px 20px rgba(39,174,96,0.4);
+            border-color: #2ecc71;
+        }
+        
+        .consent-notice {
+            font-size: 14px;
+            color: #666;
+            font-style: italic;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,107,0,0.08);
+            border-radius: 10px;
+            border-left: 4px solid #ff6b00;
+            text-align: center;
+        }
+        
+        .consent-notice strong {
+            color: #ff6b00;
+            font-weight: bold;
         }
 
-        /* Аккордеон в админке */
+        /* АДМИНКА */
+        #adminScreen input, #adminScreen select, #adminScreen textarea,
+        #profileScreen input, #profileScreen select, #profileScreen textarea {
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 10px;
+            border: 2px solid #e1e5e9; 
+            border-radius: 8px; 
+            font-size: 14px;
+            background: white;
+        }
+        #adminScreen input:focus, #adminScreen select:focus, 
+        #profileScreen input:focus, #profileScreen select:focus {
+            border-color: #ff6b00; 
+            outline: none;
+        }
+        .admin-item { 
+            background: #f8f9fa; 
+            border-radius: 8px; 
+            padding: 12px; 
+            margin-bottom: 8px; 
+            font-size: 13px; 
+        }
+        .status-active { color: #27ae60; font-weight: bold; }
+        .status-pending { color: #ff9800; font-weight: bold; }
+        .status-expired { color: #e74c3c; font-weight: bold; }
+        .days-select { 
+            background:#f8f9fa; 
+            padding:12px; 
+            border-radius:8px; 
+            margin-bottom:10px; 
+            font-size:13px; 
+        }
+
+        /* АВТОКОМПЛИТ ГОРОДОВ */
+        .city-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 420px;
+            background: rgba(0,0,0,0.95);
+            color: #fff;
+            border-radius: 8px;
+            margin-top: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 14px;
+            z-index: 1000;
+            border: 2px solid #ff6b00;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .city-suggestion-item{
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .city-suggestion-item:hover{
+            background: rgba(255,107,0,0.2);
+        }
+        .city-suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        /* АККОРДЕОН В АДМИНКЕ */
         .admin-section { margin-bottom: 10px; }
         .admin-section-title {
             width:100%;
             text-align:left;
-            padding:10px 12px;
+            padding:12px 16px;
             border-radius:10px;
             border:2px solid #ff7a00;
             background:linear-gradient(135deg,#000000,#ff7a00);
@@ -310,122 +620,533 @@
             font-weight:700;
             cursor:pointer;
             margin-bottom:4px;
+            transition: all 0.3s;
+        }
+        .admin-section-title:hover {
+            background:linear-gradient(135deg,#ff7a00,#ff3b00);
         }
         .admin-section-body {
             border-radius:10px;
             background:#f8f9fa;
-            padding:10px;
+            padding:12px;
             display:none;
         }
         .admin-section-body.active { display:block; }
 
-        /* Модальное окно оплаты */
-        .payment-modal {
+        /* ЭКРАН ИНФОРМАЦИИ О ПЕРЕВОДЕ */
+        .payment-info-screen {
+            background: #000;
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .payment-info-card {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid #ff6b00;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+
+        .payment-step {
+            background: rgba(255,107,0,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #ff6b00;
+        }
+
+        .payment-phone-number {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            color: #ffd700;
+            border: 2px dashed rgba(255,255,255,0.2);
+            font-family: monospace;
+        }
+
+        .payment-order-code {
+            background: rgba(255,107,0,0.2);
+            padding: 12px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+            font-family: monospace;
+            font-size: 18px;
+            font-weight: bold;
+            color: #ffffff;
+            border: 2px solid rgba(255,107,0,0.5);
+        }
+
+        .telegram-bot-button {
+            background: #0088cc;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+            font-weight: bold;
+            border: 2px solid #00aaff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .telegram-bot-button:hover {
+            background: #0099dd;
+            transform: translateY(-2px);
+        }
+
+        /* УПРОЩЕННОЕ МОДАЛЬНОЕ ОКНО ОПЛАТЫ */
+        .simple-payment-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             display: flex;
             align-items: center;
             justify-content: center;
             z-index: 10000;
             padding: 20px;
         }
-        .payment-content {
-            background: white;
-            border-radius: 15px;
+        .simple-payment-content {
+            background: linear-gradient(135deg, #1a1a1a, #2d2d2d);
+            border-radius: 20px;
             padding: 25px;
             max-width: 500px;
             width: 100%;
             max-height: 90vh;
             overflow-y: auto;
+            color: white;
+            border: 2px solid #ff6b00;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
         }
-        .payment-method {
-            background: #f8f9fa;
-            border-radius: 10px;
-            padding: 15px;
-            margin: 10px 0;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: all 0.3s;
-        }
-        .payment-method:hover {
-            border-color: #ff6b00;
-            background: #fff;
-        }
-        .payment-method.selected {
-            border-color: #ff6b00;
-            background: #fff8e1;
-        }
-        .qr-code {
-            text-align: center;
+        .payment-info-simple {
+            background: rgba(255,107,0,0.1);
+            border-radius: 15px;
             padding: 20px;
-            background: white;
+            margin: 20px 0;
+            border: 2px solid rgba(255,107,0,0.3);
+        }
+        .phone-number-simple {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
             border-radius: 10px;
             margin: 15px 0;
-        }
-        .premium-badge {
-            display: inline-block;
-            background: gold;
-            color: #000;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 11px;
+            text-align: center;
+            font-size: 22px;
             font-weight: bold;
-            margin-left: 5px;
+            color: #ffd700;
+            border: 2px dashed rgba(255,255,255,0.2);
+            font-family: monospace;
+        }
+        .telegram-bot-simple {
+            background: #0088cc;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 15px 0;
+            font-weight: bold;
+            border: 2px solid #00aaff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .telegram-bot-simple:hover {
+            background: #0099dd;
+            transform: translateY(-2px);
+        }
+        .order-info-simple {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .order-info-row-simple {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 5px;
+        }
+        .order-info-value-simple {
+            color: #ff6b00;
+            font-weight: bold;
+        }
+        .payment-price-simple {
+            font-size: 24px;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 20px 0;
+            text-align: center;
+            padding: 15px;
+            background: rgba(255,215,0,0.1);
+            border-radius: 10px;
+            border: 2px dashed rgba(255,215,0,0.3);
+        }
+
+        /* ЭКРАН КАТЕГОРИЙ ДЛЯ МОБИЛЬНЫХ */
+        .category-screen-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ЛОГОТИП */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo-text {
+            font-family: 'Arial Black', 'Roboto Black', sans-serif;
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ff6b00, #ffd700, #ff3b00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(255,107,0,0.4);
+            position: relative;
+            display: inline-block;
+        }
+        
+        .logo-text::after {
+            content: "";
+            position: absolute;
+            bottom: -5px;
+            left: 10%;
+            width: 80%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ff6b00, transparent);
+        }
+        
+        .logo-subtitle {
+            font-size: 16px;
+            color: #cccccc;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        /* МОДАЛЬНОЕ ОКНО СОГЛАШЕНИЯ */
+        .agreement-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            padding: 20px;
+        }
+        
+        .agreement-content {
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            color: #333;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        
+        .agreement-content h2 {
+            color: #ff6b00;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 24px;
+        }
+        
+        .agreement-content h3 {
+            color: #333;
+            margin: 15px 0 10px 0;
+            font-size: 18px;
+        }
+        
+        .agreement-content p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        
+        .agreement-content ul {
+            margin: 10px 0 15px 20px;
+        }
+        
+        .agreement-content li {
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        
+        .agreement-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+        
+        .agreement-buttons .btn {
+            flex: 1;
+            padding: 14px;
+        }
+
+        /* ЦЕНА 1000 РУБЛЕЙ */
+        .price-badge {
+            background: linear-gradient(135deg, #ff0000, #ff6b00);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 10px 0;
+            border: 3px solid #ffd700;
+            box-shadow: 0 0 20px rgba(255,0,0,0.3);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .price-highlight {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255,107,0,0.1);
+            border-radius: 15px;
+            border: 2px solid #ff6b00;
+        }
+
+        /* АДАПТИВНОСТЬ */
+        @media (max-width: 480px) {
+            .card {
+                padding: 14px;
+                border-radius: 18px;
+            }
+            
+            .card.top-card {
+                border-width: 2px;
+            }
+            
+            .card-title-main {
+                font-size: 20px;
+            }
+            
+            .card-title-sub {
+                font-size: 15px;
+            }
+            
+            .card-actions {
+                gap: 8px;
+            }
+            
+            .btn-circle {
+                width: 52px;
+                height: 52px;
+            }
+            
+            .btn-circle span {
+                font-size: 24px;
+            }
+            
+            .category-big {
+                padding: 12px 10px;
+                font-size: 16px;
+                border-radius: 24px;
+            }
+            
+            .header h1 {
+                font-size: 16px;
+                padding: 0 50px;
+            }
+            
+            .header p {
+                font-size: 11px;
+            }
+            
+            .search-input {
+                padding: 10px 16px;
+                font-size: 14px;
+            }
+            
+            .btn {
+                padding: 9px 14px;
+                font-size: 13px;
+            }
+            
+            .buttons-row {
+                padding: 10px;
+                gap: 6px;
+            }
+            
+            .buttons-row .btn {
+                padding: 8px 6px;
+                font-size: 12px;
+            }
+            
+            .simple-payment-content {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .phone-number-simple {
+                font-size: 18px;
+                padding: 12px;
+            }
+            
+            .payment-price-simple {
+                font-size: 20px;
+                padding: 12px;
+            }
+            
+            .payment-info-card {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .payment-phone-number {
+                font-size: 18px;
+                padding: 12px;
+            }
+            
+            .payment-order-code {
+                font-size: 16px;
+                padding: 10px;
+            }
+            
+            .top-label {
+                font-size: 10px;
+                padding: 3px 8px;
+            }
+            
+            .logo-text {
+                font-size: 32px;
+            }
+            
+            .logo-subtitle {
+                font-size: 13px;
+                letter-spacing: 2px;
+            }
+            
+            .agreement-content {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .agreement-content h2 {
+                font-size: 20px;
+            }
+            
+            .agreement-content h3 {
+                font-size: 16px;
+            }
+            
+            .consent-container {
+                padding: 20px;
+                margin: 20px 0;
+            }
+            
+            .consent-icon {
+                width: 50px;
+                height: 50px;
+                font-size: 24px;
+            }
+            
+            .consent-title {
+                font-size: 16px;
+            }
+            
+            .consent-checkbox {
+                padding: 12px;
+            }
+            
+            .consent-checkbox label {
+                font-size: 14px;
+            }
+            
+            .consent-link-btn {
+                min-width: 100%;
+                padding: 12px 15px;
+                font-size: 13px;
+            }
+            
+            .price-badge {
+                font-size: 16px;
+                padding: 6px 15px;
+            }
+        }
+
+        /* СКРОЛЛБАР */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff6b00;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #ff7a00;
         }
     </style>
 </head>
 <body>
 
     <!-- ПЕРВЫЙ ЭКРАН -->
-    <div id="startScreen" class="screen active" style="max-width:600px;margin:0 auto;overflow:hidden;">
+    <div id="startScreen" class="screen active">
         <div style="
-            position:relative;
-            height:100vh;
-            max-height:800px;
-            background:#000;
-            padding:20px 20px 100px 20px;
-            display:flex;
-            flex-direction:column;
-            align-items:center;
+            height: 100vh;
+            background: #000;
+            padding: 40px 20px 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         ">
-            <div style="
-                flex:1;
-                width:100%;
-                display:flex;
-                flex-direction:column;
-                align-items:center;
-            ">
-                <div style="
-                    flex:1;
-                    width:100%;
-                    display:flex;
-                    justify-content:center;
-                    align-items:center;
-                ">
-                    <img src="IKONKA.png"
-                         alt="Телефонный справочник"
-                         style="width:70%; max-width:260px; border-radius:24px; box-shadow:0 10px 30px rgba(0,0,0,0.6);">
+            <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%;">
+                <div class="logo-container">
+                    <!-- Новый логотип -->
+                    <div class="logo-text">СПРАВОЧНИК.РУ</div>
+                    <div class="logo-subtitle">ТЕЛЕФОННЫЙ СПРАВОЧНИК УСЛУГ</div>
                 </div>
 
-                <div style="width:100%; max-width:420px; margin-bottom:40px; position:relative;">
+                <div style="width: 100%; max-width: 420px; position: relative;">
                     <input id="startCityInput"
                            type="text"
-                           placeholder="Поиск по городу..."
+                           placeholder="Введите ваш город..."
                            autocomplete="off"
                            oninput="updateCitySuggestions()"
                            style="
-                               width:100%;
-                               padding:14px 18px;
-                               border-radius:8px;
-                               border:2px solid #ffffff;
-                               background:rgba(0,0,0,0.75);
-                               color:#ffffff;
-                               font-size:16px;
-                               outline:none;
+                               width: 100%;
+                               padding: 16px 20px;
+                               border-radius: 12px;
+                               border: 2px solid #ff6b00;
+                               background: rgba(255,255,255,0.1);
+                               color: #ffffff;
+                               font-size: 16px;
+                               outline: none;
                            ">
                     <div id="citySuggestions" class="city-suggestions" style="display:none;"></div>
                 </div>
@@ -433,148 +1154,274 @@
 
             <button onclick="startNext()" 
                     style="
-                        position:absolute;
-                        bottom:40px;
-                        right:40px;
-                        padding:12px 30px;
-                        border-radius:25px;
-                        border:2px solid #ffffff;
-                        background:linear-gradient(135deg,#ff7a00,#ff3b00);
-                        color:#ffffff;
-                        font-size:18px;
-                        font-weight:bold;
-                        cursor:pointer;
-                        box-shadow:0 6px 18px rgba(0,0,0,0.4);
-                    ">
-                Далее
+                        margin-top: 40px;
+                        padding: 16px 40px;
+                        border-radius: 30px;
+                        border: 2px solid #ffffff;
+                        background: linear-gradient(135deg,#ff7a00,#ff3b00);
+                        color: #ffffff;
+                        font-size: 18px;
+                        font-weight: bold;
+                        cursor: pointer;
+                        box-shadow: 0 8px 24px rgba(255,107,0,0.4);
+                        transition: all 0.3s;
+                    "
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 12px 28px rgba(255,107,0,0.6)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 8px 24px rgba(255,107,0,0.4)';">
+                ПРОДОЛЖИТЬ →
             </button>
         </div>
     </div>
 
-    <!-- ОСНОВНОЙ КОНТЕЙНЕР -->
-    <div class="container">
-
-        <!-- ГЛАВНЫЙ ЭКРАН С КАТЕГОРИЯМИ -->
-        <div id="mainScreen" class="screen">
+    <!-- ГЛАВНЫЙ ЭКРАН С КАТЕГОРИЯМИ -->
+    <div id="mainScreen" class="screen">
+        <div class="main-container">
             <div class="header" style="background:linear-gradient(135deg,#ff7a00,#ff3b00);">
                 <button class="back-btn" onclick="goBackToStart()">←</button>
-                <h1 style="font-size:20px;">ТЕЛЕФОНЫ</h1>
+                <h1 style="font-size:20px;">СПРАВОЧНИК.РУ</h1>
                 <p id="currentCityTitle">г. Усть-Катав</p>
             </div>
 
-            <div style="
-                background:#000;
-                min-height:100vh;
-                padding:16px 12px 24px;
-            ">
-                <div id="categoryButtons" style="max-height:50vh; overflow-y:auto; padding-right:4px;">
-                    <!-- категории из JS -->
+            <div style="flex: 1; display: flex; flex-direction: column; background:#000;">
+                <div class="search-box">
+                    <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск по всему справочнику...">
                 </div>
-
-                <div style="margin-top:16px; background:rgba(0,0,0,0.7); padding:12px; border-radius:16px;">
-                    <div class="search-box" style="padding:0 0 8px 0;">
-                        <input type="text" id="searchInput" class="search-input" placeholder="🔍 Поиск по выбранному городу...">
-                    </div>
-                    <div class="list" id="mainListContainer"></div>
-                    <div style="padding-top:10px;">
-                        <div class="buttons-row">
-                            <button class="btn btn-primary" onclick="showProfileScreen()">➕ Добавить услугу</button>
-                            <button class="btn btn-success" onclick="openAdmin()">🛠 Админ</button>
-                            <button class="btn btn-feedback" onclick="showFeedbackScreen()">💬 Обратная связь</button>
+                
+                <div style="padding: 0 12px; flex: 1; display: flex; flex-direction: column;">
+                    <div style="margin-bottom: 16px;">
+                        <div style="color: white; font-size: 16px; font-weight: bold; margin-bottom: 12px; padding-left: 4px;">
+                            📁 КАТЕГОРИИ УСЛУГ
+                        </div>
+                        <div id="categoryButtons" style="max-height: 40vh; overflow-y: auto; padding-right: 4px;">
+                            <!-- категории загружаются из JS -->
                         </div>
                     </div>
+                    
+                    <div style="flex: 1; display: flex; flex-direction: column; min-height: 300px;">
+                        <div style="color: white; font-size: 16px; font-weight: bold; margin-bottom: 12px; padding-left: 4px;">
+                            🔥 ПОПУЛЯРНЫЕ УСЛУГИ
+                        </div>
+                        <div class="list" id="mainListContainer" style="flex: 1; padding: 0; margin: 0;"></div>
+                    </div>
+                </div>
+
+                <div class="buttons-row">
+                    <button class="btn btn-primary" onclick="showProfileScreen()">➕ Добавить услугу</button>
+                    <button class="btn btn-success" onclick="openAdmin()">🛠 Админ</button>
+                    <button class="btn btn-telegram" onclick="openTelegramBot()">📱 Телеграмм</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- ЭКРАН КАТЕГОРИИ -->
-        <div id="categoryScreen" class="screen">
+    <!-- ЭКРАН КАТЕГОРИИ (ДЛЯ МОБИЛЬНЫХ) -->
+    <div id="categoryScreen" class="screen">
+        <div class="category-screen-container">
             <div class="header" style="background:linear-gradient(135deg,#ff7a00,#ff3b00);">
                 <button class="back-btn" onclick="showMainScreen()">←</button>
                 <h1 id="categoryTitle" style="font-size:20px;">КАТЕГОРИЯ</h1>
-                <p>Справочник</p>
+                <p>Справочник услуг</p>
             </div>
 
-            <div style="
-                background:#000;
-                min-height:100vh;
-                padding:16px 12px 24px;
-            ">
-                <div class="search-box" style="padding:0 0 16px;">
+            <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+                <div class="search-box">
                     <input type="text" id="categorySearchInput" class="search-input" placeholder="🔍 Поиск по категории...">
                 </div>
-                <div class="list" id="categoryListContainer">
+                <div class="list" id="categoryListContainer" style="flex: 1; padding: 0 12px 12px;">
                     <div class="no-results">Нет услуг в этой категории</div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- ДОБАВЛЕНИЕ УСЛУГИ -->
-        <div id="profileScreen" class="screen">
+    <!-- ДОБАВЛЕНИЕ УСЛУГИ -->
+    <div id="profileScreen" class="screen">
+        <div class="main-container">
             <div class="header">
                 <button class="back-btn" onclick="showMainScreen()">←</button>
                 <h1>Добавить услугу</h1>
                 <p>Публикация на 30 дней</p>
             </div>
-            <div style="padding: 20px; background:#fff;">
+            <div style="padding: 20px; background:#fff; flex: 1; overflow-y: auto;">
+                <!-- Баннер с ценой -->
+                <div class="price-highlight">
+                    <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Стоимость публикации:</div>
+                    <div class="price-badge">1000 ₽ / 30 дней</div>
+                    <div style="font-size: 12px; color: #666; margin-top: 5px;">Ваша услуга будет доступна всем пользователям города</div>
+                </div>
+                
                 <input type="text" id="profName" placeholder="Название (ваше имя или фирма)">
-                <select id="profCategory" style="width:100%; padding:10px; margin-bottom:10px; border:2px solid #e1e5e9; border-radius:8px;">
+                <select id="profCategory">
                     <option value="">Выберите категорию</option>
                 </select>
-                <input type="text" id="profCity" placeholder="Город">
+                <select id="profCity">
+                    <option value="">Выберите город</option>
+                </select>
                 <input type="tel" id="profPhone" placeholder="📞 Телефон (8-9xx-xxx-xx-xx)">
                 <input type="url" id="profSite" placeholder="🌐 Сайт или соцсеть (https://...)">
                 <textarea id="profDescription" rows="3" placeholder="Описание (когда работаете, особенности...)"></textarea>
-                <button class="btn btn-primary" style="width:100%; padding:12px; font-size:15px;" onclick="profileNext()">Опубликовать (30 дней)</button>
+                
+                <!-- Привлекательный блок согласия -->
+                <div class="consent-container">
+                    <div class="consent-header">
+                        <div class="consent-icon">📋</div>
+                        <div>
+                            <div class="consent-title">Согласие на обработку данных</div>
+                            <div style="font-size: 14px; color: #666;">Требуется для публикации вашей услуги</div>
+                        </div>
+                    </div>
+                    
+                    <div class="consent-checkbox">
+                        <input type="checkbox" id="privacyConsent">
+                        <label for="privacyConsent">
+                            Я подтверждаю, что ознакомлен(а) и согласен(на) с условиями обработки моих персональных данных в соответствии с Федеральным законом №152-ФЗ
+                        </label>
+                    </div>
+                    
+                    <div class="consent-links">
+                        <a href="javascript:void(0)" onclick="showAgreement()" class="consent-link-btn">
+                            📄 Политика конфиденциальности
+                        </a>
+                        <a href="javascript:void(0)" onclick="showUserAgreement()" class="consent-link-btn secondary">
+                            📝 Пользовательское соглашение
+                        </a>
+                    </div>
+                    
+                    <div class="consent-notice">
+                        <strong>Важно!</strong> Без вашего согласия мы не сможем опубликовать вашу услугу в справочнике.
+                    </div>
+                </div>
+                
+                <button class="btn btn-primary" id="publishButton" 
+                        style="width:100%; padding:14px; font-size:16px; margin-top: 10px; opacity: 0.5; cursor: not-allowed;" 
+                        onclick="profileNext()" disabled>
+                    📢 Опубликовать за 1000 ₽ (30 дней)
+                </button>
             </div>
         </div>
+    </div>
 
-        <!-- АДМИНКА -->
-        <div id="adminScreen" class="screen">
+    <!-- ЭКРАН ИНФОРМАЦИИ О ПЕРЕВОДЕ -->
+    <div id="paymentInfoScreen" class="screen">
+        <div class="main-container">
+            <div class="header">
+                <button class="back-btn" onclick="showMainScreen()">←</button>
+                <h1>Информация об оплате</h1>
+                <p>Ваша услуга ожидает оплаты</p>
+            </div>
+            <div style="padding: 20px; background:#000; flex: 1; overflow-y: auto;">
+                <div class="payment-info-card">
+                    <h2 style="color: #ff6b00; margin-bottom: 25px; text-align: center; font-size: 24px;">💰 ОПЛАТА УСЛУГИ</h2>
+                    
+                    <div class="payment-step">
+                        <h3 style="color: #ffffff; margin-bottom: 10px;">1️⃣ Стоимость услуги</h3>
+                        <div style="text-align: center; font-size: 28px; font-weight: bold; color: #ffd700; margin: 15px 0;">
+                            <span id="paymentAmountDisplay">1000</span>₽
+                        </div>
+                        <p style="color: #cccccc;">Публикация на 30 дней</p>
+                    </div>
+                    
+                    <div class="payment-step">
+                        <h3 style="color: #ffffff; margin-bottom: 10px;">2️⃣ Переведите сумму на номер:</h3>
+                        <div class="payment-phone-number" id="paymentInfoPhone">
+                            8-951-951-69-96
+                        </div>
+                        <p style="color: #cccccc; font-size: 14px;">Используйте любой банк или платежную систему</p>
+                    </div>
+                    
+                    <div class="payment-step">
+                        <h3 style="color: #ffffff; margin-bottom: 10px;">3️⃣ Укажите в комментарии номер заказа:</h3>
+                        <div class="payment-order-code" id="paymentInfoOrderCode">
+                            ORD-000000
+                        </div>
+                        <p style="color: #cccccc; font-size: 14px;">Это обязательно для идентификации платежа</p>
+                    </div>
+                    
+                    <div class="payment-step">
+                        <h3 style="color: #ffffff; margin-bottom: 10px;">4️⃣ Сохраните скриншот перевода</h3>
+                        <p style="color: #cccccc;">Скриншот должен содержать номер телефона, сумму и номер заказа</p>
+                    </div>
+                    
+                    <div class="payment-step">
+                        <h3 style="color: #ffffff; margin-bottom: 10px;">5️⃣ Отправьте скриншот в Телеграмм-бота:</h3>
+                        <div class="telegram-bot-button" onclick="openTelegramBotPayment()">
+                            🤖 @spravochnik_ru_bot
+                        </div>
+                        <p style="color: #cccccc; font-size: 14px;">Нажмите на кнопку выше или скопируйте: @spravochnik_ru_bot</p>
+                    </div>
+                    
+                    <div style="margin-top: 25px; padding: 15px; background: rgba(255,107,0,0.1); border-radius: 10px; border-left: 4px solid #ff6b00;">
+                        <h4 style="color: #ff6b00; margin-bottom: 10px;">⚠️ Важно!</h4>
+                        <p style="color: #cccccc; font-size: 13px; margin-bottom: 5px;">• Услуга будет опубликована только после подтверждения оплаты</p>
+                        <p style="color: #cccccc; font-size: 13px; margin-bottom: 5px;">• Обычно проверка занимает от 1 до 24 часов</p>
+                        <p style="color: #cccccc; font-size: 13px;">• При возникновении вопросов пишите в Телеграмм-бота</p>
+                    </div>
+                    
+                    <div style="margin-top: 25px; display: flex; gap: 15px;">
+                        <button class="btn" onclick="showMainScreen()" style="flex: 1; padding: 15px; font-size: 16px;">
+                            ✅ Я всё понял
+                        </button>
+                        <button class="btn btn-primary" onclick="copyOrderCode()" style="flex: 1; padding: 15px; font-size: 16px;">
+                            📋 Копировать номер
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- АДМИНКА -->
+    <div id="adminScreen" class="screen">
+        <div class="main-container">
             <div class="header">
                 <button class="back-btn" onclick="showMainScreen()">←</button>
                 <h1>Админ-панель</h1>
                 <p>Управление услугами</p>
             </div>
-            <div style="padding: 20px; background:#fff;">
+            <div style="padding: 20px; background:#fff; flex: 1; overflow-y: auto;">
 
                 <!-- ВХОД АДМИНА -->
-                <div id="adminPassword" style="text-align:center; padding:20px;">
-                    <input type="text" id="adminLogin" placeholder="Логин" style="width:200px; padding:10px; font-size:14px; text-align:center; margin-bottom:8px;"><br>
-                    <input type="password" id="adminPassInput" placeholder="Пароль" style="width:200px; padding:10px; font-size:14px; text-align:center;"><br><br>
-                    <button class="btn btn-primary" onclick="checkAdmin()">Войти</button>
+                <div id="adminPassword" style="text-align:center; padding:40px 20px;">
+                    <div style="font-size: 24px; color: #ff6b00; margin-bottom: 20px;">🔐</div>
+                    <input type="text" id="adminLogin" placeholder="Логин" style="width:200px; padding:12px; font-size:16px; text-align:center; margin-bottom:10px; border-radius:8px;"><br>
+                    <input type="password" id="adminPassInput" placeholder="Пароль" style="width:200px; padding:12px; font-size:16px; text-align:center; border-radius:8px;"><br><br>
+                    <button class="btn btn-primary" onclick="checkAdmin()" style="padding: 12px 40px; font-size: 16px;">Войти в админку</button>
                 </div>
 
                 <div id="adminContent" style="display:none;">
 
-                    <!-- ПАПКА: КАТЕГОРИИ (ТОЛЬКО ДЛЯ СУПЕР-АДМИНА) -->
+                    <!-- КАТЕГОРИИ (ТОЛЬКО ДЛЯ СУПЕР-АДМИНА) -->
                     <div id="adminCategoriesBlock" class="admin-section">
-                        <button class="admin-section-title" onclick="toggleAdminSection('cats')">🗂 Категории</button>
+                        <button class="admin-section-title" onclick="toggleAdminSection('cats')">🗂 Управление категориями</button>
                         <div class="admin-section-body" id="adminSection-cats">
-                            <div style="margin-bottom:8px;">
-                                <input type="text" id="newCategoryName" placeholder="Новая категория">
-                                <button class="btn btn-success" style="width:100%; margin-top:6px;" onclick="addCategory()">➕ Добавить категорию</button>
+                            <div style="margin-bottom:15px;">
+                                <input type="text" id="newCategoryName" placeholder="Название новой категории" style="width:100%;">
+                                <button class="btn btn-success" style="width:100%; margin-top:10px; padding:12px;" onclick="addCategory()">
+                                    ➕ Добавить категорию
+                                </button>
                             </div>
-                            <div id="adminCategoriesList" style="margin-bottom:4px;"></div>
+                            <div id="adminCategoriesList" style="margin-bottom:10px;"></div>
                         </div>
                     </div>
 
-                    <!-- ПАПКА: СОЗДАНИЕ УСЛУГ (С ПОИСКОМ) -->
+                    <!-- СОЗДАНИЕ УСЛУГ -->
                     <div class="admin-section">
                         <button class="admin-section-title" onclick="toggleAdminSection('services')">📝 Создание услуг</button>
                         <div class="admin-section-body" id="adminSection-services">
-                            <input type="text" id="adminName" placeholder="Название">
-                            <select id="adminCategory" style="width:100%; padding:10px; margin-bottom:10px; border:2px solid #e1e5e9; border-radius:8px;">
+                            <input type="text" id="adminName" placeholder="Название услуги">
+                            <select id="adminCategory">
                                 <option value="">Категория</option>
                             </select>
-                            <input type="text" id="adminCity" placeholder="Город">
+                            <select id="adminCity">
+                                <option value="">Выберите город</option>
+                            </select>
                             <input type="tel" id="adminPhone" placeholder="Телефон">
                             <input type="url" id="adminSite" placeholder="Сайт">
                             <textarea id="adminDescription" rows="2" placeholder="Описание"></textarea>
 
                             <div class="days-select">
-                                <label style="display:block; margin-bottom:4px; font-weight:bold;">📅 Срок публикации:</label>
-                                <select id="adminDays" style="width:100%; padding:8px; border:2px solid #e1e5e9; border-radius:8px; font-size:14px;">
+                                <label style="display:block; margin-bottom:6px; font-weight:bold;">📅 Срок публикации:</label>
+                                <select id="adminDays">
                                     <option value="7">7 дней (тест)</option>
                                     <option value="30" selected>30 дней (стандарт)</option>
                                     <option value="90">90 дней (3 месяца)</option>
@@ -582,133 +1429,99 @@
                                     <option value="0">Бессрочно (админ)</option>
                                 </select>
                             </div>
-                            <button class="btn btn-success" style="width:100%; margin-bottom:10px;" onclick="createAdminService()">➕ Создать услугу</button>
+                            <button class="btn btn-success" style="width:100%; margin-bottom:15px; padding:14px;" onclick="createAdminService()">
+                                ➕ Создать услугу
+                            </button>
                             
                             <!-- ПОИСК В АДМИНКЕ -->
-                            <div style="background:rgba(248,249,250,0.5); padding:12px; border-radius:8px; margin-bottom:10px;">
-                                <input type="text" id="adminSearchInput" class="search-input" 
-                                       placeholder="🔍 Поиск услуг (имя, категория, город, телефон, описание...)" 
-                                       style="width:100%; padding:10px 16px; font-size:14px; border:2px solid #e1e5e9; border-radius:20px;"
+                            <div style="background:rgba(248,249,250,0.5); padding:12px; border-radius:8px; margin-bottom:15px;">
+                                <input type="text" id="adminSearchInput" 
+                                       placeholder="🔍 Поиск услуг..." 
+                                       style="width:100%; padding:12px 16px; font-size:14px; border:2px solid #e1e5e9; border-radius:20px;"
                                        oninput="filterAdminList()">
                             </div>
                             
-                            <h3 style="margin-bottom:6px; color:#2c3e50; font-size:15px;">📋 Все услуги</h3>
-                            <div id="adminList" style="max-height:300px; overflow-y:auto;"></div>
+                            <h3 style="margin-bottom:10px; color:#2c3e50; font-size:16px;">📋 Все услуги</h3>
+                            <div id="adminList" style="max-height:400px; overflow-y:auto;"></div>
                         </div>
                     </div>
 
-                    <!-- ПАПКА: ПЛАТЕЖИ И ПРЕМИУМ -->
+                    <!-- ПЛАТЕЖИ И НАСТРОЙКИ -->
                     <div class="admin-section">
-                        <button class="admin-section-title" onclick="toggleAdminSection('payments')">💰 Платежи и Премиум</button>
+                        <button class="admin-section-title" onclick="toggleAdminSection('payments')">💰 Платежи и Настройки</button>
                         <div class="admin-section-body" id="adminSection-payments">
-                            <div style="margin-bottom: 15px; padding: 10px; background: #f1f8e9; border-radius: 8px;">
-                                <h4 style="margin: 0 0 10px 0; color: #2e7d32;">💰 Статистика платежей</h4>
+                            <div style="margin-bottom: 20px; padding: 15px; background: #f1f8e9; border-radius: 10px;">
+                                <h4 style="margin: 0 0 15px 0; color: #2e7d32; font-size: 16px;">💰 Статистика платежей</h4>
                                 <div id="paymentStats">
                                     <p>Загрузка статистики...</p>
                                 </div>
                             </div>
                             
-                            <div style="margin-bottom: 15px;">
-                                <h4 style="margin: 0 0 10px 0; color: #2c3e50;">💳 Управление платежами</h4>
-                                <div id="paymentsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 10px;"></div>
-                                <div style="display: flex; gap: 10px;">
+                            <div style="margin-bottom: 20px;">
+                                <h4 style="margin: 0 0 15px 0; color: #2c3e50; font-size: 16px;">💳 Управление платежами</h4>
+                                <div id="paymentsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 15px;"></div>
+                                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                     <button class="btn btn-primary" onclick="loadPayments()">🔄 Обновить</button>
                                     <button class="btn btn-success" onclick="exportPaymentsToCSV()">📥 Экспорт в CSV</button>
                                     <button class="btn btn-danger" onclick="clearCompletedPayments()">🧹 Очистить выполненные</button>
                                 </div>
                             </div>
                             
-                            <div style="margin-bottom: 15px;">
-                                <h4 style="margin: 0 0 10px 0; color: #2c3e50;">🚀 Активные премиум-услуги</h4>
-                                <div id="activePremiums" style="max-height: 200px; overflow-y: auto;"></div>
-                            </div>
-                            
-                            <div style="padding: 15px; background: #fff3e0; border-radius: 8px;">
-                                <h4 style="margin: 0 0 10px 0; color: #e65100;">⚙️ Настройки цен</h4>
-                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                    <div>
-                                        <label style="display: block; font-size: 12px; color: #666;">В топе (7 дней)</label>
-                                        <input type="number" id="priceTop" value="100" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 12px; color: #666;">Выделение (7 дней)</label>
-                                        <input type="number" id="priceHighlight" value="50" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size: 12px; color: #666;">Верификация (30 дней)</label>
-                                        <input type="number" id="priceVerified" value="300" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    </div>
-                                    <div>
-                                        <label style="display: block; font-size:12px; color: #666;">Срочно (3 дня)</label>
-                                        <input type="number" id="priceUrgent" value="150" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                                    </div>
+                            <div style="padding: 20px; background: #fff3e0; border-radius: 10px;">
+                                <h4 style="margin: 0 0 15px 0; color: #e65100; font-size: 16px;">⚙️ Настройки системы</h4>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; font-size: 13px; color: #666; margin-bottom: 5px;">📱 Номер для перевода:</label>
+                                    <input type="tel" id="paymentPhone" value="8-951-951-69-96" 
+                                           style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px; text-align: center;">
+                                    <p style="font-size: 12px; color: #666; margin-top: 5px;">Этот номер отображается пользователям для оплаты</p>
                                 </div>
-                                <button class="btn btn-success" style="width: 100%; margin-top: 10px;" onclick="savePricing()">💾 Сохранить цены</button>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; font-size: 13px; color: #666; margin-bottom: 5px;">🤖 Телеграмм-бот:</label>
+                                    <input type="text" id="telegramBot" value="@spravochnik_ru_bot" 
+                                           style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 8px; font-size: 14px;">
+                                    <p style="font-size: 12px; color: #666; margin-top: 5px;">Сюда пользователи отправляют скриншоты оплаты</p>
+                                </div>
+                                
+                                <div style="margin-bottom: 15px;">
+                                    <label style="display: block; font-size: 13px; color: #666;">💰 Публикация на 30 дней</label>
+                                    <input type="number" id="priceStandard" value="1000" style="width: 100%; padding: 10px; border: 2px solid #ddd; border-radius: 8px; font-size: 16px;">
+                                    <p style="font-size: 12px; color: #666; margin-top: 5px;">Цена за стандартную публикацию</p>
+                                </div>
+                                
+                                <button class="btn btn-success" style="width: 100%; margin-top: 10px; padding: 14px;" onclick="saveSettings()">
+                                    💾 Сохранить настройки
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ПАПКА: ОТЗЫВЫ/ПРЕДЛОЖЕНИЯ -->
-                    <div class="admin-section">
-                        <button class="admin-section-title" onclick="toggleAdminSection('feedback')">📨 Жалобы и предложения</button>
-                        <div class="admin-section-body" id="adminSection-feedback">
-                            <div id="adminFeedbackList"></div>
-                        </div>
-                    </div>
-
-                    <!-- ПАПКА: ЧАТ АДМИНОВ -->
+                    <!-- ЧАТ АДМИНОВ -->
                     <div class="admin-section">
                         <button class="admin-section-title" onclick="toggleAdminSection('chat')">💬 Чат админов</button>
                         <div class="admin-section-body" id="adminSection-chat">
-                            <div id="adminChatMessages" style="max-height:200px; overflow-y:auto; margin-bottom:8px;"></div>
-                            <textarea id="adminChatInput" rows="2" placeholder="Сообщение для других админов..."></textarea>
-                            <button class="btn btn-primary" style="width:100%;" onclick="sendAdminChat()">Отправить</button>
+                            <div id="adminChatMessages" style="max-height:300px; overflow-y:auto; margin-bottom:15px;"></div>
+                            <textarea id="adminChatInput" rows="3" placeholder="Сообщение для других админов..."></textarea>
+                            <button class="btn btn-primary" style="width:100%; padding:14px; margin-top:10px;" onclick="sendAdminChat()">Отправить сообщение</button>
                         </div>
                     </div>
 
                 </div>
             </div>
         </div>
-
-        <!-- ОБРАТНАЯ СВЯЗЬ -->
-        <div id="feedbackScreen" class="screen">
-            <div class="header">
-                <button class="back-btn" onclick="showMainScreen()">←</button>
-                <h1>Обратная связь</h1>
-            </div>
-            <div style="padding: 20px; background:#fff;">
-                <textarea id="feedbackText" rows="5" placeholder="Предложение по улучшению или сообщение об ошибке..."></textarea>
-                <input type="tel" id="feedbackPhone" placeholder="📞 Ваш телефон (опционально)">
-                <button class="btn btn-feedback" style="width:100%; padding:12px;" onclick="sendFeedback()">Отправить</button>
-            </div>
-        </div>
-
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ОПЛАТЫ -->
-    <div id="paymentModal" class="payment-modal" style="display: none;">
-        <div class="payment-content">
-            <h2 style="color: #ff6b00; margin-bottom: 20px;" id="paymentTitle">Оплата премиум-статуса</h2>
-            <div id="paymentDetails"></div>
-            <div id="paymentMethods">
-                <h4 style="margin: 20px 0 10px 0;">Выберите способ оплаты:</h4>
-                <div class="payment-method" onclick="selectPaymentMethod('sber')">
-                    <strong>💳 Сбербанк Online</strong>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Перевод по номеру телефона</p>
-                </div>
-                <div class="payment-method" onclick="selectPaymentMethod('tinkoff')">
-                    <strong>📱 Тинькофф</strong>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Оплата по QR-коду</p>
-                </div>
-                <div class="payment-method" onclick="selectPaymentMethod('cash')">
-                    <strong>💰 Наличные курьеру</strong>
-                    <p style="margin: 5px 0 0 0; font-size: 12px; color: #666;">Оплата при встрече</p>
-                </div>
+    <!-- МОДАЛЬНОЕ ОКНО ПОЛЬЗОВАТЕЛЬСКОГО СОГЛАШЕНИЯ -->
+    <div id="agreementModal" class="agreement-modal" style="display:none;">
+        <div class="agreement-content">
+            <h2 id="agreementTitle">Политика конфиденциальности</h2>
+            <div id="agreementText">
+                <!-- Текст будет заполняться JavaScript -->
             </div>
-            <div id="paymentInstructions" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px;"></div>
-            <div style="margin-top: 20px; display: flex; gap: 10px;">
-                <button class="btn btn-primary" onclick="processPayment()" id="payButton" style="flex: 2;">✅ Подтвердить оплату</button>
-                <button class="btn btn-danger" onclick="closePaymentModal()" style="flex: 1;">❌ Отмена</button>
+            <div class="agreement-buttons">
+                <button class="btn" onclick="hideAgreement()">Закрыть</button>
+                <button class="btn btn-primary" onclick="printAgreement()">🖨 Печать</button>
             </div>
         </div>
     </div>
@@ -718,27 +1531,31 @@
         let data = [];
         let currentCity = 'Усть-Катав';
         let adminMode = false;
-        let feedbackData = [];
         let currentCategoryForSearch = 'all';
         let adminSearchTerm = '';
         let admins = [];
         let currentAdmin = null;
         let categories = [];
         let adminChat = [];
+        let lastAddedService = null;
         
-        // ================ СИСТЕМА МОНЕТИЗАЦИИ ================
-        let premiumServices = {};
-        let paymentsLog = [];
-        let currentPayment = null;
-        let selectedPaymentMethod = null;
-        
-        // Цены по умолчанию
-        let PRICING = {
-            TOP_7_DAYS: 100,
-            HIGHLIGHT_7_DAYS: 50,
-            VERIFIED_30_DAYS: 300,
-            URGENT_3_DAYS: 150
+        // ================ НАСТРОЙКИ СИСТЕМЫ ================
+        let SYSTEM_SETTINGS = {
+            paymentPhone: '8-951-951-69-96',
+            telegramBot: '@spravochnik_ru_bot',
+            PRICING: {
+                STANDARD_30_DAYS: 1000
+            }
         };
+        
+        // ================ СИСТЕМА ТОП-УСЛУГ ================
+        let topServices = {};
+        
+        const cities = [
+            'Усть-Катав','Юрюзань','Катав-Ивановск','Трёхгорный','Аша',
+            'Сим','Миасс','Златоуст','Челябинск','Уфа','Магнитогорск','Кыштым',
+            'Екатеринбург','Москва','Санкт-Петербург','Новосибирск'
+        ];
         
         const defaultCategories = [
             'Такси',
@@ -753,536 +1570,318 @@
             'Товары от местных'
         ];
         
-        const cities = [
-            'Усть-Катав','Юрюзань','Катав-Ивановск','Трёхгорный','Аша',
-            'Сим','Миасс','Златоуст','Челябинск','Уфа','Магнитогорск','Кыштым'
-        ];
+        // ================ ТЕКСТЫ СОГЛАШЕНИЙ ================
+        const PRIVACY_POLICY = `
+            <h3>1. Общие положения</h3>
+            <p>1.1. Настоящая Политика конфиденциальности (далее — «Политика») регулирует порядок обработки и защиты персональных данных пользователей справочника услуг «СПРАВОЧНИК.РУ» (далее — «Справочник»).</p>
+            
+            <h3>2. Состав персональных данных</h3>
+            <p>2.1. При добавлении услуги в Справочник мы собираем следующие персональные данные:</p>
+            <ul>
+                <li>Имя или название организации</li>
+                <li>Категория услуги</li>
+                <li>Город предоставления услуги</li>
+                <li>Контактный телефон</li>
+                <li>Сайт или страница в социальных сетях (при наличии)</li>
+                <li>Описание услуги</li>
+            </ul>
+            
+            <h3>3. Цели обработки персональных данных</h3>
+            <p>3.1. Персональные данные обрабатываются для следующих целей:</p>
+            <ul>
+                <li>Публикация информации об услуге в Справочнике</li>
+                <li>Обеспечение связи между поставщиками и потребителями услуг</li>
+                <li>Идентификация пользователя при обращении в поддержку</li>
+                <li>Соблюдение требований законодательства РФ</li>
+            </ul>
+            
+            <h3>4. Срок хранения данных</h3>
+            <p>4.1. Персональные данные хранятся в течение срока действия услуги в Справочнике и 1 (один) год после её удаления или истечения срока публикации.</p>
+            
+            <h3>5. Права пользователя</h3>
+            <p>5.1. Пользователь имеет право:</p>
+            <ul>
+                <li>На доступ к своим персональным данным</li>
+                <li>На уточнение, блокирование или уничтожение своих персональных данных</li>
+                <li>На отзыв согласия на обработку персональных данных</li>
+                <li>На обжалование действий или бездействия администрации Справочника</li>
+            </ul>
+            
+            <h3>6. Безопасность данных</h3>
+            <p>6.1. Мы принимаем необходимые организационные и технические меры для защиты персональных данных от неправомерного доступа, уничтожения, изменения, блокирования, копирования, распространения, а также от иных неправомерных действий.</p>
+            
+            <h3>7. Контактная информация</h3>
+            <p>7.1. По вопросам, связанным с обработкой персональных данных, обращайтесь по адресу электронной почты: privacy@справочник.ру</p>
+            
+            <h3>8. Изменения в Политике</h3>
+            <p>8.1. Мы оставляем за собой право вносить изменения в настоящую Политику. Новая редакция Политики вступает в силу с момента её размещения в Справочнике.</p>
+            
+            <p><strong>Дата последнего обновления:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+        `;
+        
+        const USER_AGREEMENT = `
+            <h3>1. Общие положения</h3>
+            <p>1.1. Настоящее Пользовательское соглашение (далее — «Соглашение») регулирует отношения между администрацией справочника услуг «СПРАВОЧНИК.РУ» (далее — «Администрация») и пользователем Справочника (далее — «Пользователь»).</p>
+            
+            <h3>2. Предмет соглашения</h3>
+            <p>2.1. Администрация предоставляет Пользователю возможность добавлять информацию об услугах в Справочник на платной основе.</p>
+            
+            <h3>3. Условия использования</h3>
+            <p>3.1. Пользователь обязуется:</p>
+            <ul>
+                <li>Предоставлять достоверную информацию об услугах</li>
+                <li>Не размещать информацию, нарушающую законодательство РФ</li>
+                <li>Не использовать Справочник для мошеннических действий</li>
+                <li>Соблюдать правила и требования Администрации</li>
+            </ul>
+            
+            <h3>4. Стоимость услуг и оплата</h3>
+            <p>4.1. Публикация услуги в Справочнике на 30 дней является платной услугой.</p>
+            <p>4.2. Стоимость публикации составляет 1000 (одна тысяча) рублей.</p>
+            <p>4.3. Оплата производится путём перевода денежных средств на указанный в Справочнике номер телефона.</p>
+            
+            <h3>5. Ответственность сторон</h3>
+            <p>5.1. Администрация не несёт ответственности за:</p>
+            <ul>
+                <li>Достоверность информации, предоставленной Пользователями</li>
+                <li>Качество услуг, предоставляемых третьими лицами</li>
+                <li>Последствия использования информации из Справочника</li>
+            </ul>
+            
+            <h3>6. Интеллектуальная собственность</h3>
+            <p>6.1. Все права на Справочник, его дизайн и программный код принадлежат Администрации.</p>
+            
+            <h3>7. Заключительные положения</h3>
+            <p>7.1. Настоящее Соглашение вступает в силу с момента его принятия Пользователем.</p>
+            <p>7.2. Все споры решаются путём переговоров, а при невозможности достижения согласия — в судебном порядке по месту нахождения Администрации.</p>
+            
+            <h3>8. Реквизиты</h3>
+            <p><strong>Наименование:</strong> СПРАВОЧНИК.РУ</p>
+            <p><strong>Электронная почта:</strong> info@справочник.ру</p>
+            
+            <p><strong>Дата вступления в силу:</strong> ${new Date().toLocaleDateString('ru-RU')}</p>
+        `;
         
         // ================ ИНИЦИАЛИЗАЦИЯ ================
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('СПРАВОЧНИК.РУ - скрипт загружен');
             loadAdmins();
             loadCategories();
-            loadPricing();
-            loadPayments();
-            loadPremiumServices();
+            loadSettings();
+            loadTopServices();
             renderCategoryButtons();
             renderCategorySelects();
+            populateCitySelects();
             loadData();
-            loadFeedback();
             loadAdminChat();
             setupSearch();
-            updatePaymentStats();
+            updateSettingsDisplay();
+            
+            // Настройка обработчика чекбокса согласия
+            const consentCheckbox = document.getElementById('privacyConsent');
+            const publishButton = document.getElementById('publishButton');
+            
+            if (consentCheckbox && publishButton) {
+                consentCheckbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        publishButton.disabled = false;
+                        publishButton.style.opacity = '1';
+                        publishButton.style.cursor = 'pointer';
+                    } else {
+                        publishButton.disabled = true;
+                        publishButton.style.opacity = '0.5';
+                        publishButton.style.cursor = 'not-allowed';
+                    }
+                });
+            }
         });
         
-        // ================ СИСТЕМА ЦЕН ================
-        function loadPricing() {
-            const saved = localStorage.getItem('ustKatavPricing');
+        // ================ ФУНКЦИИ ДЛЯ СОГЛАШЕНИЙ ================
+        function showAgreement() {
+            document.getElementById('agreementTitle').textContent = 'Политика конфиденциальности';
+            document.getElementById('agreementText').innerHTML = PRIVACY_POLICY;
+            document.getElementById('agreementModal').style.display = 'flex';
+        }
+        
+        function showUserAgreement() {
+            document.getElementById('agreementTitle').textContent = 'Пользовательское соглашение';
+            document.getElementById('agreementText').innerHTML = USER_AGREEMENT;
+            document.getElementById('agreementModal').style.display = 'flex';
+        }
+        
+        function hideAgreement() {
+            document.getElementById('agreementModal').style.display = 'none';
+        }
+        
+        function printAgreement() {
+            const printContent = document.getElementById('agreementText').innerHTML;
+            const title = document.getElementById('agreementTitle').textContent;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>${title}</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+                        h2 { color: #ff6b00; }
+                        h3 { color: #333; margin-top: 20px; }
+                        p { margin-bottom: 15px; }
+                        ul { margin: 10px 0 15px 20px; }
+                        li { margin-bottom: 8px; }
+                        @media print {
+                            body { margin: 20px; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h2>${title}</h2>
+                    ${printContent}
+                    <p style="margin-top: 40px; font-size: 12px; color: #666;">
+                        Распечатано: ${new Date().toLocaleString('ru-RU')}
+                    </p>
+                </body>
+                </html>
+            `);
+            printWindow.document.close();
+            printWindow.focus();
+            printWindow.print();
+        }
+        
+        // ================ НАСТРОЙКИ СИСТЕМЫ ================
+        function loadSettings() {
+            const saved = localStorage.getItem('spravochnikRuSettings');
             if (saved) {
-                PRICING = JSON.parse(saved);
+                SYSTEM_SETTINGS = JSON.parse(saved);
             }
-            updatePricingInputs();
         }
         
-        function savePricing() {
-            PRICING = {
-                TOP_7_DAYS: parseInt(document.getElementById('priceTop').value) || 100,
-                HIGHLIGHT_7_DAYS: parseInt(document.getElementById('priceHighlight').value) || 50,
-                VERIFIED_30_DAYS: parseInt(document.getElementById('priceVerified').value) || 300,
-                URGENT_3_DAYS: parseInt(document.getElementById('priceUrgent').value) || 150
+        function saveSettings() {
+            SYSTEM_SETTINGS = {
+                paymentPhone: document.getElementById('paymentPhone').value.trim() || '8-951-951-69-96',
+                telegramBot: document.getElementById('telegramBot').value.trim() || '@spravochnik_ru_bot',
+                PRICING: {
+                    STANDARD_30_DAYS: parseInt(document.getElementById('priceStandard').value) || 1000
+                }
             };
-            localStorage.setItem('ustKatavPricing', JSON.stringify(PRICING));
-            alert('✅ Цены сохранены!');
+            localStorage.setItem('spravochnikRuSettings', JSON.stringify(SYSTEM_SETTINGS));
+            updateSettingsDisplay();
+            
+            if (document.getElementById('paymentAmountDisplay')) {
+                document.getElementById('paymentAmountDisplay').textContent = SYSTEM_SETTINGS.PRICING.STANDARD_30_DAYS;
+            }
+            
+            alert('✅ Настройки сохранены!');
         }
         
-        function updatePricingInputs() {
-            if (document.getElementById('priceTop')) {
-                document.getElementById('priceTop').value = PRICING.TOP_7_DAYS;
-                document.getElementById('priceHighlight').value = PRICING.HIGHLIGHT_7_DAYS;
-                document.getElementById('priceVerified').value = PRICING.VERIFIED_30_DAYS;
-                document.getElementById('priceUrgent').value = PRICING.URGENT_3_DAYS;
+        function updateSettingsDisplay() {
+            if (document.getElementById('paymentPhone')) {
+                document.getElementById('paymentPhone').value = SYSTEM_SETTINGS.paymentPhone;
+                document.getElementById('telegramBot').value = SYSTEM_SETTINGS.telegramBot;
+                document.getElementById('priceStandard').value = SYSTEM_SETTINGS.PRICING.STANDARD_30_DAYS;
             }
         }
         
-        // ================ ПРЕМИУМ СИСТЕМА ================
-        function loadPremiumServices() {
-            const saved = localStorage.getItem('ustKatavPremium');
-            premiumServices = saved ? JSON.parse(saved) : {};
+        // ================ СИСТЕМА ТОП-УСЛУГ ================
+        function loadTopServices() {
+            const saved = localStorage.getItem('spravochnikRuTopServices');
+            topServices = saved ? JSON.parse(saved) : {};
         }
         
-        function savePremiumServices() {
-            localStorage.setItem('ustKatavPremium', JSON.stringify(premiumServices));
+        function saveTopServices() {
+            localStorage.setItem('spravochnikRuTopServices', JSON.stringify(topServices));
         }
         
-        function isPremiumActive(serviceId, type) {
-            const premium = premiumServices[serviceId];
-            if (!premium) return false;
+        function isTopService(serviceId) {
+            const service = topServices[serviceId];
+            if (!service) return false;
             
             const now = Date.now();
-            return premium[type] && premium[type] > now;
+            return service.expires > now;
         }
         
-        function getPremiumClass(serviceId) {
-            if (isPremiumActive(serviceId, 'TOP_7_DAYS')) return 'premium-top';
-            if (isPremiumActive(serviceId, 'HIGHLIGHT_7_DAYS')) return 'premium-highlight';
-            if (isPremiumActive(serviceId, 'VERIFIED_30_DAYS')) return 'premium-verified';
-            if (isPremiumActive(serviceId, 'URGENT_3_DAYS')) return 'premium-urgent';
-            return '';
-        }
-        
-        // ================ ПЛАТЕЖИ ================
-        function loadPayments() {
-            const saved = localStorage.getItem('ustKatavPayments');
-            paymentsLog = saved ? JSON.parse(saved) : [];
-            renderPaymentsList();
-        }
-        
-        function savePayments() {
-            localStorage.setItem('ustKatavPayments', JSON.stringify(paymentsLog));
-        }
-        
-        // ================ ОПЛАТА ================
-        function showPremiumOptions(serviceId, serviceName) {
-            currentPayment = {
-                serviceId,
-                serviceName,
-                date: new Date().toISOString(),
-                orderId: 'ORD' + Date.now() + Math.random().toString(36).substr(2, 6).toUpperCase()
-            };
+        // ================ ЗАПОЛНЕНИЕ ВЫБОРА ГОРОДОВ ================
+        function populateCitySelects() {
+            const profCitySelect = document.getElementById('profCity');
+            const adminCitySelect = document.getElementById('adminCity');
             
-            document.getElementById('paymentTitle').textContent = `Оплата для: ${serviceName}`;
-            document.getElementById('paymentDetails').innerHTML = `
-                <div style="background: #f0f8ff; padding: 15px; border-radius: 10px; margin-bottom: 15px;">
-                    <h4 style="margin: 0 0 10px 0; color: #0066cc;">Выберите премиум-статус:</h4>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                        <button class="btn-premium" onclick="selectPremiumType('TOP_7_DAYS')" 
-                                style="width: 100%; text-align: left; padding: 10px;">
-                            🚀 В топе на 7 дней<br>
-                            <strong>${PRICING.TOP_7_DAYS}₽</strong>
-                        </button>
-                        <button class="btn-premium" onclick="selectPremiumType('HIGHLIGHT_7_DAYS')" 
-                                style="width: 100%; text-align: left; padding: 10px;">
-                            🎨 Выделение на 7 дней<br>
-                            <strong>${PRICING.HIGHLIGHT_7_DAYS}₽</strong>
-                        </button>
-                        <button class="btn-premium" onclick="selectPremiumType('VERIFIED_30_DAYS')" 
-                                style="width: 100%; text-align: left; padding: 10px;">
-                            ✅ Верификация на 30 дней<br>
-                            <strong>${PRICING.VERIFIED_30_DAYS}₽</strong>
-                        </button>
-                        <button class="btn-premium" onclick="selectPremiumType('URGENT_3_DAYS')" 
-                                style="width: 100%; text-align: left; padding: 10px;">
-                            🔥 Срочно! На 3 дня<br>
-                            <strong>${PRICING.URGENT_3_DAYS}₽</strong>
-                        </button>
-                    </div>
-                </div>
-            `;
-            
-            document.getElementById('paymentModal').style.display = 'flex';
-            selectedPaymentMethod = null;
-            document.getElementById('paymentInstructions').style.display = 'none';
-            document.getElementById('payButton').disabled = true;
-        }
-        
-        function selectPremiumType(type) {
-            if (!currentPayment) return;
-            
-            currentPayment.type = type;
-            currentPayment.price = PRICING[type];
-            
-            // Подсвечиваем выбранную кнопку
-            document.querySelectorAll('.btn-premium').forEach(btn => btn.style.opacity = '0.6');
-            event.target.style.opacity = '1';
-            event.target.style.border = '2px solid #ff6b00';
-            
-            document.getElementById('paymentInstructions').style.display = 'none';
-            document.getElementById('payButton').disabled = true;
-        }
-        
-        function selectPaymentMethod(method) {
-            selectedPaymentMethod = method;
-            
-            // Подсвечиваем выбранный метод
-            document.querySelectorAll('.payment-method').forEach(el => el.classList.remove('selected'));
-            event.target.classList.add('selected');
-            
-            showPaymentInstructions();
-            document.getElementById('payButton').disabled = false;
-        }
-        
-        function showPaymentInstructions() {
-            if (!currentPayment || !selectedPaymentMethod) return;
-            
-            let instructions = '';
-            switch(selectedPaymentMethod) {
-                case 'sber':
-                    instructions = `
-                        <h4>💳 Оплата через Сбербанк Online:</h4>
-                        <ol style="margin: 10px 0; padding-left: 20px;">
-                            <li>Откройте <strong>Сбербанк Online</strong></li>
-                            <li>Переведите <strong>${currentPayment.price}₽</strong> на номер: <strong>+7-900-123-45-67</strong></li>
-                            <li>В комментарии укажите: <code>${currentPayment.orderId}</code></li>
-                            <li>Сохраните скриншот перевода</li>
-                            <li>Отправьте скриншот в Telegram: <strong>@spravochnik_pay</strong></li>
-                        </ol>
-                        <p style="background: #fff3cd; padding: 10px; border-radius: 5px; color: #856404;">
-                            ⚠️ Без скриншота оплата не будет подтверждена!
-                        </p>
-                    `;
-                    break;
-                    
-                case 'tinkoff':
-                    instructions = `
-                        <h4>📱 Оплата через Тинькофф:</h4>
-                        <div class="qr-code">
-                            <div style="background: white; padding: 20px; display: inline-block; border: 2px dashed #ddd;">
-                                [QR-КОД ДЛЯ ОПЛАТЫ ${currentPayment.price}₽]
-                            </div>
-                            <p style="margin-top: 10px; font-size: 12px;">
-                                Либо переведите на карту: <strong>2200 1234 5678 9012</strong>
-                            </p>
-                        </div>
-                        <p>В комментарии укажите: <code>${currentPayment.orderId}</code></p>
-                    `;
-                    break;
-                    
-                case 'cash':
-                    instructions = `
-                        <h4>💰 Оплата наличными курьеру:</h4>
-                        <p>Курьер свяжется с вами в течение <strong>24 часов</strong>.</p>
-                        <p>Подготовьте <strong>${currentPayment.price}₽</strong> наличными.</p>
-                        <p><strong>Номер заказа:</strong> <code>${currentPayment.orderId}</code></p>
-                        <p><strong>Телефон курьера:</strong> 8-900-987-65-43</p>
-                        <p style="background: #fff3cd; padding: 10px; border-radius: 5px; color: #856404;">
-                            ⚠️ Сообщите курьеру номер заказа!
-                        </p>
-                    `;
-                    break;
+            if (profCitySelect) {
+                profCitySelect.innerHTML = '<option value="">Выберите город</option>' + 
+                    cities.map(city => `<option value="${city}">${city}</option>`).join('');
             }
             
-            document.getElementById('paymentInstructions').innerHTML = instructions;
-            document.getElementById('paymentInstructions').style.display = 'block';
-        }
-        
-        function processPayment() {
-            if (!currentPayment || !currentPayment.type || !selectedPaymentMethod) {
-                alert('Выберите тип премиума и способ оплаты!');
-                return;
-            }
-            
-            // Добавляем платёж в историю
-            const payment = {
-                ...currentPayment,
-                method: selectedPaymentMethod,
-                status: 'pending',
-                timestamp: new Date().toISOString(),
-                adminNote: ''
-            };
-            
-            paymentsLog.unshift(payment);
-            savePayments();
-            
-            alert(`✅ Заказ #${payment.orderId} создан!\n\nСледуйте инструкциям для оплаты.\nПосле оплаты статус будет подтверждён администратором.`);
-            
-            closePaymentModal();
-            if (adminMode) {
-                renderPaymentsList();
-                updatePaymentStats();
+            if (adminCitySelect) {
+                adminCitySelect.innerHTML = '<option value="">Выберите город</option>' + 
+                    cities.map(city => `<option value="${city}">${city}</option>`).join('');
             }
         }
         
-        function closePaymentModal() {
-            document.getElementById('paymentModal').style.display = 'none';
-            currentPayment = null;
-            selectedPaymentMethod = null;
-        }
-        
-        // ================ АДМИНКА: УПРАВЛЕНИЕ ПЛАТЕЖАМИ ================
-        function renderPaymentsList() {
-            const list = document.getElementById('paymentsList');
-            if (!list) return;
-            
-            if (!paymentsLog.length) {
-                list.innerHTML = '<div style="text-align: center; padding: 20px; color: #666;">Платежей нет</div>';
-                return;
-            }
-            
-            list.innerHTML = paymentsLog.map(payment => `
-                <div style="background: ${payment.status === 'completed' ? '#d4edda' : payment.status === 'cancelled' ? '#f8d7da' : '#fff3cd'}; 
-                            border: 1px solid ${payment.status === 'completed' ? '#c3e6cb' : payment.status === 'cancelled' ? '#f5c6cb' : '#ffeaa7'};
-                            border-radius: 8px; padding: 12px; margin-bottom: 8px;">
-                    <div style="display: flex; justify-content: space-between; align-items: start;">
-                        <div style="flex: 1;">
-                            <strong style="color: #2c3e50;">#${payment.orderId}</strong>
-                            <div style="font-size: 12px; color: #666; margin-top: 4px;">
-                                ${payment.serviceName}<br>
-                                Тип: ${payment.type} | ${payment.price}₽<br>
-                                Метод: ${payment.method} | ${new Date(payment.timestamp).toLocaleString()}
-                            </div>
-                            ${payment.adminNote ? `<div style="margin-top: 5px; padding: 5px; background: white; border-radius: 4px; font-size: 11px;">${payment.adminNote}</div>` : ''}
-                        </div>
-                        <div style="display: flex; flex-direction: column; gap: 5px; margin-left: 10px;">
-                            <span style="background: ${payment.status === 'completed' ? '#28a745' : payment.status === 'cancelled' ? '#dc3545' : '#ffc107'}; 
-                                        color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">
-                                ${payment.status === 'completed' ? '✅ Выполнен' : payment.status === 'cancelled' ? '❌ Отменён' : '⏳ Ожидание'}
-                            </span>
-                            ${payment.status === 'pending' ? `
-                                <button class="btn btn-success" onclick="completePayment('${payment.orderId}')" style="padding: 4px 8px; font-size: 11px;">✅ Подтвердить</button>
-                                <button class="btn btn-danger" onclick="cancelPayment('${payment.orderId}')" style="padding: 4px 8px; font-size: 11px;">❌ Отменить</button>
-                            ` : ''}
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        
-        function completePayment(orderId) {
-            const payment = paymentsLog.find(p => p.orderId === orderId);
-            if (!payment) return;
-            
-            if (confirm(`Подтвердить оплату заказа #${orderId}?\nУслуга: ${payment.serviceName}\nСумма: ${payment.price}₽`)) {
-                payment.status = 'completed';
-                payment.completedAt = new Date().toISOString();
-                
-                // Активируем премиум
-                activatePremium(payment.serviceId, payment.type);
-                
-                savePayments();
-                renderPaymentsList();
-                updatePaymentStats();
-                loadData(); // Обновляем список услуг
-                
-                alert(`✅ Платёж #${orderId} подтверждён!\nПремиум-статус активирован.`);
-            }
-        }
-        
-        function cancelPayment(orderId) {
-            const payment = paymentsLog.find(p => p.orderId === orderId);
-            if (!payment) return;
-            
-            const reason = prompt('Причина отмены платежа:');
-            if (reason === null) return;
-            
-            payment.status = 'cancelled';
-            payment.adminNote = reason;
-            payment.cancelledAt = new Date().toISOString();
-            
-            savePayments();
-            renderPaymentsList();
-            updatePaymentStats();
-            
-            alert(`❌ Платёж #${orderId} отменён.`);
-        }
-        
-        function activatePremium(serviceId, type) {
-            const service = data.find(s => s.id === serviceId);
-            if (!service) return;
-            
-            const now = Date.now();
-            let expires = now;
-            
-            switch(type) {
-                case 'TOP_7_DAYS':
-                case 'HIGHLIGHT_7_DAYS':
-                    expires = now + 7 * 24 * 60 * 60 * 1000;
-                    break;
-                case 'VERIFIED_30_DAYS':
-                    expires = now + 30 * 24 * 60 * 60 * 1000;
-                    break;
-                case 'URGENT_3_DAYS':
-                    expires = now + 3 * 24 * 60 * 60 * 1000;
-                    break;
-            }
-            
-            if (!premiumServices[serviceId]) {
-                premiumServices[serviceId] = {};
-            }
-            
-            premiumServices[serviceId][type] = expires;
-            savePremiumServices();
-            
-            // Обновляем отображение
-            filterListBy(currentCategoryForSearch, document.getElementById('categorySearchInput')?.value || '', 'categoryListContainer');
-            filterListBy('all', document.getElementById('searchInput')?.value || '', 'mainListContainer');
-        }
-        
-        function updatePaymentStats() {
-            const stats = document.getElementById('paymentStats');
-            if (!stats) return;
-            
-            const total = paymentsLog.length;
-            const completed = paymentsLog.filter(p => p.status === 'completed').length;
-            const pending = paymentsLog.filter(p => p.status === 'pending').length;
-            const revenue = paymentsLog.filter(p => p.status === 'completed').reduce((sum, p) => sum + (p.price || 0), 0);
-            
-            stats.innerHTML = `
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: #2c3e50;">${total}</div>
-                        <div style="font-size: 12px; color: #666;">Всего платежей</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: #28a745;">${completed}</div>
-                        <div style="font-size: 12px; color: #666;">Выполнено</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: #ffc107;">${pending}</div>
-                        <div style="font-size: 12px; color: #666;">Ожидание</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 24px; font-weight: bold; color: #0066cc;">${revenue}₽</div>
-                        <div style="font-size: 12px; color: #666;">Выручка</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function exportPaymentsToCSV() {
-            const csv = [
-                ['Номер заказа', 'Услуга', 'Тип', 'Сумма', 'Метод', 'Статус', 'Дата', 'Примечание'],
-                ...paymentsLog.map(p => [
-                    p.orderId,
-                    p.serviceName,
-                    p.type,
-                    p.price + '₽',
-                    p.method,
-                    p.status,
-                    new Date(p.timestamp).toLocaleString(),
-                    p.adminNote || ''
-                ])
-            ].map(row => row.join(';')).join('\n');
-            
-            const blob = new Blob(['\uFEFF' + csv], {type: 'text/csv;charset=utf-8;'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `payments_${new Date().toISOString().split('T')[0]}.csv`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            
-            alert('📊 CSV файл скачан!');
-        }
-        
-        function clearCompletedPayments() {
-            if (confirm('Очистить историю выполненных платежей?\nСтатистика сохранится.')) {
-                paymentsLog = paymentsLog.filter(p => p.status !== 'completed');
-                savePayments();
-                renderPaymentsList();
-                updatePaymentStats();
-                alert('✅ История очищена!');
-            }
-        }
-        
-        // ================ ОСНОВНЫЕ ФУНКЦИИ (из твоего кода) ================
-        // Оригинальные функции остаются без изменений, только добавляем премиум-кнопки
-        
-        function filterListBy(category, search, containerId){
-            const container = document.getElementById(containerId);
-            if (!container) return;
-
-            let filtered = data.filter(item =>
-                (adminMode || item.status === 'active') &&
-                item.city.toLowerCase().includes(currentCity.toLowerCase()) &&
-                (category === 'all' || item.category === category) &&
-                (!search ||
-                 item.name.toLowerCase().includes(search) ||
-                 item.category.toLowerCase().includes(search) ||
-                 item.description.toLowerCase().includes(search))
+        // ================ ТЕЛЕГРАММ ================
+        function openTelegramBot() {
+            const message = encodeURIComponent(
+                `Привет! 👋\n\n` +
+                `Я хочу отправить скриншот оплаты для справочника СПРАВОЧНИК.РУ.\n` +
+                `Пожалуйста, подтвердите получение.`
             );
             
-            // Сортировка: премиум услуги первые
-            filtered.sort((a, b) => {
-                const aPremium = Object.keys(premiumServices[a.id] || {}).some(type => isPremiumActive(a.id, type));
-                const bPremium = Object.keys(premiumServices[b.id] || {}).some(type => isPremiumActive(b.id, type));
-                
-                if (aPremium && !bPremium) return -1;
-                if (!aPremium && bPremium) return 1;
-                
-                // Если оба премиум или оба не премиум - сортируем по времени добавления
-                return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
-            });
-
-            if (!filtered.length) {
-                container.innerHTML = '<div class="no-results">' +
-                    (search ? 'Ничего не найдено' :
-                     (containerId === 'mainListContainer' ? '' : 'Нет услуг в этой категории')) +
-                    '</div>';
-                return;
-            }
-
-            container.innerHTML = filtered.map(item => {
-                const parts = item.name.split(' ');
-                const main = parts[0] || '';
-                const sub = parts.slice(1).join(' ') || '';
-                const phoneClean = item.phone.replace(/[^0-9]/g,'');
-                const premiumClass = getPremiumClass(item.id);
-                
-                return `
-                <div class="card ${premiumClass}">
-                    <div class="card-content">
-                        <div class="card-title-main">${main.toUpperCase()}</div>
-                        ${sub ? `<div class="card-title-sub">${sub}</div>` : ''}
-                        <div class="card-city">${'г.' + item.city.toUpperCase()}</div>
-                        <div class="card-phone">т.${item.phone}</div>
-                        
-                        <!-- КНОПКИ ПРЕМИУМА -->
-                        ${isServiceOwner(item) ? `
-                        <div style="margin-top: 10px; display: flex; gap: 5px; flex-wrap: wrap;">
-                            ${!isPremiumActive(item.id, 'TOP_7_DAYS') ? `
-                            <button class="btn-premium" onclick="showPremiumOptions('${item.id}', '${item.name}')" 
-                                    style="background: linear-gradient(135deg,#ffd700,#ff9500);">
-                                🚀 В топ (${PRICING.TOP_7_DAYS}₽)
-                            </button>` : ''}
-                            
-                            ${!isPremiumActive(item.id, 'HIGHLIGHT_7_DAYS') ? `
-                            <button class="btn-premium" onclick="showPremiumOptions('${item.id}', '${item.name}')"
-                                    style="background: linear-gradient(135deg,#00b894,#00a085);">
-                                🎨 Выделить (${PRICING.HIGHLIGHT_7_DAYS}₽)
-                            </button>` : ''}
-                            
-                            ${!isPremiumActive(item.id, 'VERIFIED_30_DAYS') ? `
-                            <button class="btn-premium" onclick="showPremiumOptions('${item.id}', '${item.name}')"
-                                    style="background: linear-gradient(135deg,#0984e3,#6c5ce7);">
-                                ✅ Галочка (${PRICING.VERIFIED_30_DAYS}₽)
-                            </button>` : ''}
-                            
-                            ${!isPremiumActive(item.id, 'URGENT_3_DAYS') ? `
-                            <button class="btn-premium" onclick="showPremiumOptions('${item.id}', '${item.name}')"
-                                    style="background: linear-gradient(135deg,#e17055,#d63031);">
-                                🔥 Срочно! (${PRICING.URGENT_3_DAYS}₽)
-                            </button>` : ''}
-                        </div>
-                        ` : ''}
-                    </div>
-                    <div class="card-actions">
-                        ${item.site ? `<a href="${item.site}" target="_blank" class="btn-circle btn-site-circle"><span>🌐</span></a>` : ''}
-                        <a href="tel:${phoneClean}" class="btn-circle btn-call-circle"><span>📞</span></a>
-                    </div>
-                </div>`;
-            }).join('');
+            const botUsername = SYSTEM_SETTINGS.telegramBot.replace('@', '');
+            const telegramUrl = `https://t.me/${botUsername}?start=${message}`;
+            window.open(telegramUrl, '_blank');
         }
         
-        function isServiceOwner(item) {
-            // Простая проверка - в реальном приложении нужна авторизация
-            // Сейчас показываем кнопки всем, но можно сделать проверку по телефону
-            return true; // Для теста показываем всем
+        // ================ ИНФОРМАЦИЯ О ПЕРЕВОДЕ ================
+        function showPaymentInfoScreen(serviceId, serviceName) {
+            console.log('Показ экрана оплаты для услуги:', serviceId, serviceName);
+            
+            lastAddedService = {
+                id: serviceId,
+                name: serviceName
+            };
+            
+            const orderId = 'ORD-' + Date.now().toString().slice(-6) + Math.random().toString(36).substr(2, 3).toUpperCase();
+            
+            document.getElementById('paymentInfoPhone').textContent = SYSTEM_SETTINGS.paymentPhone;
+            document.getElementById('paymentInfoOrderCode').textContent = orderId;
+            document.getElementById('paymentAmountDisplay').textContent = SYSTEM_SETTINGS.PRICING.STANDARD_30_DAYS;
+            
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('paymentInfoScreen').classList.add('active');
         }
         
-        // Остальной твой код остается БЕЗ ИЗМЕНЕНИЙ ниже этой строки
-        // Включая все остальные функции: loadAdmins, loadCategories, renderCategoryButtons, 
-        // renderCategorySelects, loadData, saveData, openCategory, showMainScreen, 
-        // showProfileScreen, profileNext, openAdmin, checkAdmin, toggleAdminSection,
-        // createAdminService, filterAdminList, renderAdminList, moveToTop, deleteItem,
-        // loadFeedback, saveFeedback, showFeedbackScreen, sendFeedback, 
-        // getVisibleFeedback, renderFeedbackForAdmin, loadAdminChat, saveAdminChat,
-        // getVisibleChat, renderAdminChat, sendAdminChat, updateCitySuggestions,
-        // chooseCity, startNext, goBackToStart, updateCityTitle, setupSearch
+        function copyOrderCode() {
+            const orderCode = document.getElementById('paymentInfoOrderCode').textContent;
+            navigator.clipboard.writeText(orderCode)
+                .then(() => {
+                    alert('✅ Номер заказа скопирован: ' + orderCode);
+                })
+                .catch(err => {
+                    console.error('Ошибка копирования: ', err);
+                    alert('❌ Не удалось скопировать номер заказа');
+                });
+        }
         
-        // ================ НАЧАЛО ОРИГИНАЛЬНОГО КОДА ================
+        function openTelegramBotPayment() {
+            const orderCode = document.getElementById('paymentInfoOrderCode').textContent;
+            const serviceName = lastAddedService ? lastAddedService.name : 'Новая услуга';
+            
+            const message = encodeURIComponent(
+                `Привет! 👋\n\n` +
+                `Я оплатил услугу для справочника СПРАВОЧНИК.РУ\n` +
+                `Услуга: ${serviceName}\n` +
+                `Номер заказа: ${orderCode}\n` +
+                `Сумма: ${SYSTEM_SETTINGS.PRICING.STANDARD_30_DAYS}₽\n\n` +
+                `Прилагаю скриншот оплаты.`
+            );
+            
+            const botUsername = SYSTEM_SETTINGS.telegramBot.replace('@', '');
+            const telegramUrl = `https://t.me/${botUsername}?start=${message}`;
+            window.open(telegramUrl, '_blank');
+        }
+        
         /* ==== АДМИНЫ ==== */
         function loadAdmins(){
-            const saved = localStorage.getItem('ustKatavAdmins');
+            const saved = localStorage.getItem('spravochnikRuAdmins');
             if (saved){
                 admins = JSON.parse(saved);
             } else {
@@ -1290,35 +1889,39 @@
                     {login:'super', pass:'1111', role:'super', city:'ALL'},
                     {login:'ust',   pass:'2222', role:'city',  city:'Усть-Катав'}
                 ];
-                localStorage.setItem('ustKatavAdmins', JSON.stringify(admins));
+                localStorage.setItem('spravochnikRuAdmins', JSON.stringify(admins));
             }
         }
 
         /* ==== КАТЕГОРИИ ==== */
         function loadCategories(){
-            const saved = localStorage.getItem('ustKatavCategories');
+            const saved = localStorage.getItem('spravochnikRuCategories');
             categories = saved ? JSON.parse(saved) : defaultCategories.slice();
-            localStorage.setItem('ustKatavCategories', JSON.stringify(categories));
+            localStorage.setItem('spravochnikRuCategories', JSON.stringify(categories));
         }
 
         function saveCategories(){
-            localStorage.setItem('ustKatavCategories', JSON.stringify(categories));
+            localStorage.setItem('spravochnikRuCategories', JSON.stringify(categories));
         }
 
         function renderCategoryButtons(){
             const wrap = document.getElementById('categoryButtons');
-            wrap.innerHTML = categories.map(cat => `
-                <button class="category-big" onclick="openCategory('${cat}')">
+            if (!wrap) return;
+            
+            wrap.innerHTML = categories.map(cat => {
+                const safeCat = cat.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                return `
+                <button class="category-big" onclick="openCategory('${safeCat}')">
                     ${cat.toUpperCase()}
                 </button>
-            `).join('');
+            `}).join('');
         }
 
         function renderCategorySelects(){
             const profSel = document.getElementById('profCategory');
             const adminSel = document.getElementById('adminCategory');
 
-            const options = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+            const options = categories.map(cat => `<option value="${cat.replace(/"/g, '&quot;')}">${cat}</option>`).join('');
 
             if (profSel){
                 profSel.innerHTML = '<option value="">Выберите категорию</option>' + options;
@@ -1340,13 +1943,13 @@
             }
 
             box.innerHTML = categories.map((cat, index) => `
-                <div class="category-pill">
-                    <span>${cat}</span>
-                    <div style="display:flex; gap:4px;">
-                        <button class="btn btn-success" style="padding:4px 8px;font-size:11px;"
-                                onclick="renameCategory(${index})">✏ Переименовать</button>
-                        <button class="btn btn-danger" style="padding:4px 8px;font-size:11px;"
-                                onclick="deleteCategory(${index})">🗑 Удалить</button>
+                <div class="category-pill" style="display:flex; align-items:center; justify-content:space-between; padding:10px; margin-bottom:8px; background:#f1f2f6; border-radius:8px;">
+                    <span style="flex:1; font-weight:bold;">${cat}</span>
+                    <div style="display:flex; gap:8px;">
+                        <button class="btn btn-success" style="padding:6px 12px;font-size:12px;"
+                                onclick="renameCategory(${index})">✏️ Переименовать</button>
+                        <button class="btn btn-danger" style="padding:6px 12px;font-size:12px;"
+                                onclick="deleteCategory(${index})">🗑️ Удалить</button>
                     </div>
                 </div>
             `).join('');
@@ -1413,19 +2016,91 @@
 
         /* ==== ПОИСК ==== */
         function setupSearch() {
-            document.getElementById('searchInput').addEventListener('input', function(){
-                const search = this.value.toLowerCase();
-                filterListBy('all', search, 'mainListContainer');
-            });
-
-            document.getElementById('categorySearchInput').addEventListener('input', function(){
-                const search = this.value.toLowerCase();
-                filterListBy(currentCategoryForSearch, search, 'categoryListContainer');
-            });
+            const searchInput = document.getElementById('searchInput');
+            const categorySearchInput = document.getElementById('categorySearchInput');
+            
+            if (searchInput) {
+                searchInput.addEventListener('input', function(){
+                    const search = this.value.toLowerCase();
+                    filterListBy('all', search, 'mainListContainer');
+                });
+            }
+            
+            if (categorySearchInput) {
+                categorySearchInput.addEventListener('input', function(){
+                    const search = this.value.toLowerCase();
+                    filterListBy(currentCategoryForSearch, search, 'categoryListContainer');
+                });
+            }
         }
 
         function updateCityTitle() {
-            document.getElementById('currentCityTitle').textContent = 'г. ' + currentCity;
+            const title = document.getElementById('currentCityTitle');
+            if (title) {
+                title.textContent = 'г. ' + currentCity;
+            }
+        }
+
+        /* ==== ФИЛЬТРАЦИЯ СПИСКА ==== */
+        function filterListBy(category, search, containerId){
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            let filtered = data.filter(item =>
+                (adminMode || item.status === 'active') &&
+                item.city.toLowerCase().includes(currentCity.toLowerCase()) &&
+                (category === 'all' || item.category === category) &&
+                (!search ||
+                 item.name.toLowerCase().includes(search) ||
+                 item.category.toLowerCase().includes(search) ||
+                 (item.description && item.description.toLowerCase().includes(search)))
+            );
+            
+            // Сортировка: ТОП услуги всегда первые, затем по дате добавления
+            filtered.sort((a, b) => {
+                const aTop = isTopService(a.id);
+                const bTop = isTopService(b.id);
+                
+                if (aTop && !bTop) return -1;
+                if (!aTop && bTop) return 1;
+                
+                return new Date(b.addedAt || 0) - new Date(a.addedAt || 0);
+            });
+
+            if (!filtered.length) {
+                container.innerHTML = '<div class="no-results">' +
+                    (search ? 'Ничего не найдено' :
+                     (containerId === 'mainListContainer' ? 'Нет популярных услуг' : 'Нет услуг в этой категории')) +
+                    '</div>';
+                return;
+            }
+
+            container.innerHTML = filtered.map(item => {
+                const parts = item.name.split(' ');
+                const main = parts[0] || '';
+                const sub = parts.slice(1).join(' ') || '';
+                const phoneClean = item.phone.replace(/[^0-9]/g,'');
+                const isTop = isTopService(item.id);
+                const topClass = isTop ? 'top-card' : '';
+                
+                const safeId = item.id.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
+                return `
+                <div class="card ${topClass}">
+                    ${isTop ? '<div class="top-label"><span class="gold-icon">🥇</span> В ТОПЕ</div>' : ''}
+                    <div class="card-content">
+                        <div class="card-title-main">${main.toUpperCase()}</div>
+                        ${sub ? `<div class="card-title-sub">${sub}</div>` : ''}
+                        <div class="card-city">${'г.' + item.city.toUpperCase()}</div>
+                        <div class="card-phone">т.${item.phone}</div>
+                        ${item.description ? `<div class="card-description">${item.description}</div>` : ''}
+                    </div>
+                    <div class="card-actions">
+                        ${item.site ? `<a href="${item.site}" target="_blank" class="btn-circle btn-site-circle"><span>🌐</span></a>` : ''}
+                        <a href="tel:${phoneClean}" class="btn-circle btn-call-circle"><span>📞</span></a>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         /* ==== ГОРОДА НА СТАРТЕ ==== */
@@ -1448,7 +2123,7 @@
             }
 
             box.innerHTML = filtered.map(c => 
-                `<div class="city-suggestion-item" onclick="chooseCity('${c}')">${c}</div>`
+                `<div class="city-suggestion-item" onclick="chooseCity('${c.replace(/'/g, "\\'")}')">${c}</div>`
             ).join('');
             box.style.display = 'block';
         }
@@ -1460,10 +2135,17 @@
 
         function startNext() {
             const cityInput = document.getElementById('startCityInput').value.trim();
-            currentCity = cityInput || 'Усть-Катав';
+            if (!cityInput) {
+                alert('Пожалуйста, введите ваш город');
+                return;
+            }
+            
+            currentCity = cityInput;
             updateCityTitle();
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('mainScreen').classList.add('active');
+            
+            filterListBy('all', '', 'mainListContainer');
         }
 
         function goBackToStart() {
@@ -1473,7 +2155,7 @@
 
         /* ==== ДАННЫЕ УСЛУГ ==== */
         function loadData() {
-            const saved = localStorage.getItem('ustKatavData');
+            const saved = localStorage.getItem('spravochnikRuData');
             data = saved ? JSON.parse(saved) : [
                 {id: '1', name: "🚕 Такси ФОРТУНА", category: "Такси", city: "Усть-Катав", phone: "8-919-000-00-00", site: "", description: "Круглосуточное такси по городу и району", status: "active", expires: new Date().getTime() + 30*24*60*60*1000, addedAt: new Date().toISOString()},
                 {id: '2', name: "🔧 Сантехник Артём", category: "Сантехник", city: "Усть-Катав", phone: "8-919-000-00-01", site: "", description: "Работаю в свободное от работы время", status: "active", expires: new Date().getTime() + 30*24*60*60*1000, addedAt: new Date().toISOString()},
@@ -1481,7 +2163,6 @@
                 {id: '4', name: "🛒 Мёд от Андрея", category: "Товары от местных", city: "Усть-Катав", phone: "8-919-000-00-03", site: "https://vk.com/med_andreya", description: "Домашний мёд, возможна доставка по городу", status: "active", expires: new Date().getTime() + 30*24*60*60*1000, addedAt: new Date().toISOString()}
             ];
             
-            // Добавляем ID если нет
             data = data.map((item, index) => {
                 if (!item.id) item.id = 'item_' + Date.now() + '_' + index;
                 if (!item.addedAt) item.addedAt = new Date().toISOString();
@@ -1501,25 +2182,29 @@
         }
 
         function saveData(){ 
-            // Добавляем ID если нет
             data = data.map((item, index) => {
                 if (!item.id) item.id = 'item_' + Date.now() + '_' + index;
                 return item;
             });
-            localStorage.setItem('ustKatavData', JSON.stringify(data)); 
+            localStorage.setItem('spravochnikRuData', JSON.stringify(data)); 
         }
 
         function openCategory(cat){
             currentCategoryForSearch = cat;
             document.getElementById('categoryTitle').textContent = cat.toUpperCase();
             document.getElementById('categorySearchInput').value = '';
-            document.getElementById('searchInput').value = '';
 
             filterListBy(cat, '', 'categoryListContainer');
-            filterListBy(cat, '', 'mainListContainer');
 
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('categoryScreen').classList.add('active');
+            
+            const container = document.getElementById('categoryListContainer');
+            if (container) {
+                setTimeout(() => {
+                    container.scrollTop = 0;
+                }, 50);
+            }
         }
 
         function showMainScreen(){
@@ -1529,49 +2214,99 @@
             currentAdmin = null;
             document.getElementById('searchInput').value = '';
             filterListBy('all', '', 'mainListContainer');
+            
+            // Сбрасываем чекбокс при возврате
+            const consentCheckbox = document.getElementById('privacyConsent');
+            const publishButton = document.getElementById('publishButton');
+            if (consentCheckbox && publishButton) {
+                consentCheckbox.checked = false;
+                publishButton.disabled = true;
+                publishButton.style.opacity = '0.5';
+                publishButton.style.cursor = 'not-allowed';
+            }
         }
 
         /* ==== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==== */
         function showProfileScreen(){
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('profileScreen').classList.add('active');
-            document.getElementById('profCity').value = currentCity;
+            const profCitySelect = document.getElementById('profCity');
+            if (profCitySelect) {
+                for (let i = 0; i < profCitySelect.options.length; i++) {
+                    if (profCitySelect.options[i].value === currentCity) {
+                        profCitySelect.selectedIndex = i;
+                        break;
+                    }
+                }
+            }
+            
+            // Сбрасываем форму
+            document.getElementById('profName').value = '';
+            document.getElementById('profCategory').value = '';
+            document.getElementById('profPhone').value = '';
+            document.getElementById('profSite').value = '';
+            document.getElementById('profDescription').value = '';
+            
+            // Сбрасываем чекбокс
+            const consentCheckbox = document.getElementById('privacyConsent');
+            const publishButton = document.getElementById('publishButton');
+            if (consentCheckbox && publishButton) {
+                consentCheckbox.checked = false;
+                publishButton.disabled = true;
+                publishButton.style.opacity = '0.5';
+                publishButton.style.cursor = 'not-allowed';
+            }
         }
 
         function profileNext(){
             const name = document.getElementById('profName').value.trim();
             const category = document.getElementById('profCategory').value;
+            const city = document.getElementById('profCity').value;
             const phone = document.getElementById('profPhone').value.trim();
             
-            if(!name || !category || !phone){
-                alert('Заполните название, категорию и телефон');
+            if(!name || !category || !city || !phone){
+                alert('Заполните все обязательные поля!');
                 return;
             }
             
+            // Проверка согласия на обработку персональных данных
+            const consentCheckbox = document.getElementById('privacyConsent');
+            if (!consentCheckbox || !consentCheckbox.checked) {
+                alert('Для публикации услуги необходимо дать согласие на обработку персональных данных.');
+                return;
+            }
+            
+            const serviceId = 'service_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             const service = {
-                id: 'service_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                id: serviceId,
                 name: name,
                 category: category,
-                city: document.getElementById('profCity').value.trim() || currentCity,
+                city: city,
                 phone: phone,
                 site: document.getElementById('profSite').value.trim(),
                 description: document.getElementById('profDescription').value.trim(),
-                status: 'active',
-                expires: new Date().getTime() + 30*24*60*60*1000,
-                addedAt: new Date().toISOString()
+                status: 'pending',
+                expires: null,
+                addedAt: new Date().toISOString(),
+                consentGiven: true,
+                consentDate: new Date().toISOString()
             };
             
             data.unshift(service);
             saveData();
-            showMainScreen();
-            alert('✅ Услуга добавлена на 30 дней!');
             
+            // Сбрасываем форму
             document.getElementById('profName').value = '';
             document.getElementById('profCategory').value = '';
             document.getElementById('profCity').value = '';
             document.getElementById('profPhone').value = '';
             document.getElementById('profSite').value = '';
             document.getElementById('profDescription').value = '';
+            if (consentCheckbox) {
+                consentCheckbox.checked = false;
+            }
+            
+            showPaymentInfoScreen(serviceId, name);
         }
 
         /* ==== АДМИНКА ==== */
@@ -1613,10 +2348,7 @@
 
             renderAdminCategoriesList();
             renderAdminList();
-            renderFeedbackForAdmin();
             renderAdminChat();
-            loadPayments();
-            updatePaymentStats();
             
             document.getElementById('adminSearchInput').value = '';
             adminSearchTerm = '';
@@ -1661,61 +2393,182 @@
             
             adminList.innerHTML = visible.map(item => {
                 const realIndex = data.indexOf(item);
+                const safeId = item.id.replace(/'/g, "\\'");
+                
                 let statusText;
-                if (item.expires === null) {
+                let statusClass;
+                
+                if (item.status === 'pending') {
+                    statusText = '⏳ Ожидает оплаты';
+                    statusClass = 'status-pending';
+                } else if (item.expires === null) {
                     statusText = '∞ (админ)';
+                    statusClass = 'status-active';
                 } else {
                     const daysLeft = Math.ceil((item.expires - now) / (24*60*60*1000));
                     statusText = item.status === 'active' ? `${daysLeft} дн.` : 'Истёк';
+                    statusClass = item.status === 'active' ? 'status-active' : 'status-expired';
                 }
+                
+                const hasTop = isTopService(item.id);
+                const topBadge = hasTop ? '<span style="background: #ffd700; color: #000; padding: 2px 6px; border-radius: 8px; font-size: 10px; margin-left: 5px;">🥇 ТОП</span>' : '';
+                
+                // Отображаем информацию о согласии
+                const consentInfo = item.consentGiven ? 
+                    '<br><small style="color: #27ae60;">✅ Согласие получено ' + 
+                    (item.consentDate ? new Date(item.consentDate).toLocaleDateString('ru-RU') : '') + '</small>' : 
+                    '<br><small style="color: #e74c3c;">❌ Согласие не получено</small>';
                 
                 return `
                 <div class="admin-item">
                     <div style="display:flex; justify-content:space-between; align-items:start;">
                         <div style="flex:1">
-                            <strong>${item.name}</strong><br>
+                            <strong>${item.name} ${topBadge}</strong><br>
                             <small>${item.category} | ${item.city} | ${item.phone}</small>
                             ${item.site ? '<br><small>🌐 ' + item.site + '</small>' : ''}
                             ${item.description ? '<br><small>' + item.description + '</small>' : ''}
-                            <br><span class="${item.status === 'active' ? 'status-active' : 'status-expired'}">${statusText}</span>
+                            ${consentInfo}
+                            <br><span class="${statusClass}">${statusText}</span>
                         </div>
-                        <div style="white-space:nowrap; margin-left:10px;">
-                            <button class="btn btn-success" onclick="moveToTop(${realIndex})" 
-                                    style="margin-bottom:4px;font-size:11px;padding:6px 10px">⬆ В топ</button><br>
+                        <div style="white-space:nowrap; margin-left:10px; display: flex; flex-direction: column; gap: 4px;">
+                            ${item.status === 'pending' ? `
+                                <button class="btn btn-warning" onclick="confirmPayment('${safeId}')" 
+                                        style="font-size:11px;padding:6px 10px; width: 120px;">✅ ОПЛАТА ПРОШЛА</button>
+                            ` : ''}
+                            ${!hasTop ? `
+                                <button class="btn btn-success" onclick="activateTop('${safeId}')" 
+                                        style="font-size:11px;padding:6px 10px; width: 120px; background: linear-gradient(135deg, #ffd700, #ff9500); color: #000; border-color: #ffb300;">🥇 СДЕЛАТЬ ТОП</button>
+                            ` : `
+                                <button class="btn btn-danger" onclick="removeTop('${safeId}')" 
+                                        style="font-size:11px;padding:6px 10px; width: 120px;">📉 УБРАТЬ ТОП</button>
+                            `}
                             <button class="btn btn-danger" onclick="deleteItem(${realIndex})" 
-                                    style="font-size:11px;padding:6px 10px">🗑 Удалить</button>
+                                    style="font-size:11px;padding:6px 10px; width: 120px;">🗑 Удалить</button>
                         </div>
                     </div>
                 </div>`;
             }).join('');
         }
-
+        
+        // ФУНКЦИЯ: Активация ТОПа админом
+        function activateTop(serviceId) {
+            const service = data.find(s => s.id === serviceId);
+            if (!service) {
+                alert('Услуга не найдена!');
+                return;
+            }
+            
+            if (confirm(`Сделать услугу "${service.name}" ТОП-услугой?\n\nУслуга получит золотое оформление и будет отображаться первой в своей категории.`)) {
+                const days = prompt('На сколько дней активировать ТОП? (по умолчанию 7)', '7');
+                if (days === null) return;
+                
+                const daysNum = parseInt(days) || 7;
+                const now = Date.now();
+                const expires = now + daysNum * 24 * 60 * 60 * 1000;
+                
+                topServices[serviceId] = {
+                    expires: expires,
+                    activatedAt: now,
+                    days: daysNum
+                };
+                saveTopServices();
+                
+                // Перемещаем услугу в начало категории
+                moveToTopInCategory(serviceId, service.category);
+                
+                // Обновляем отображение
+                renderAdminList();
+                loadData();
+                
+                alert(`✅ Услуга "${service.name}" теперь ТОП-услуга на ${daysNum} дней!\n\nСрок действия: до ${new Date(expires).toLocaleDateString()}`);
+            }
+        }
+        
+        // ФУНКЦИЯ: Удаление ТОПа
+        function removeTop(serviceId) {
+            const service = data.find(s => s.id === serviceId);
+            if (!service) {
+                alert('Услуга не найдена!');
+                return;
+            }
+            
+            if (confirm(`Убрать статус ТОП у услуги "${service.name}"?`)) {
+                delete topServices[serviceId];
+                saveTopServices();
+                
+                renderAdminList();
+                loadData();
+                
+                alert(`✅ Статус ТОП убран у услуги "${service.name}"`);
+            }
+        }
+        
+        // ФУНКЦИЯ: Перемещение услуги в начало своей категории
+        function moveToTopInCategory(serviceId, category) {
+            const serviceIndex = data.findIndex(item => item.id === serviceId);
+            if (serviceIndex === -1) return;
+            
+            const categoryServices = data.filter(item => item.category === category);
+            
+            const firstInCategoryIndex = data.findIndex(item => item.category === category);
+            if (firstInCategoryIndex === serviceIndex) {
+                return;
+            }
+            
+            const [service] = data.splice(serviceIndex, 1);
+            data.unshift(service);
+            
+            saveData();
+        }
+        
+        function confirmPayment(serviceId) {
+            const service = data.find(s => s.id === serviceId);
+            if (!service) {
+                alert('Услуга не найдена!');
+                return;
+            }
+            
+            if (service.status !== 'pending') {
+                alert('Эта услуга уже не ожидает оплаты!');
+                return;
+            }
+            
+            service.status = 'active';
+            service.expires = new Date().getTime() + 30 * 24 * 60 * 60 * 1000;
+            
+            saveData();
+            renderAdminList();
+            loadData();
+            
+            alert(`✅ Услуга "${service.name}" успешно опубликована!\n\nСрок публикации: 30 дней\nСтатус: Активна`);
+        }
+        
         function createAdminService(){
             const name = document.getElementById('adminName').value.trim();
             const category = document.getElementById('adminCategory').value;
+            const city = document.getElementById('adminCity').value;
             const phone = document.getElementById('adminPhone').value.trim();
             
-            if(!name || !category || !phone){
-                alert('Заполните основные поля');
+            if(!name || !category || !city || !phone){
+                alert('Заполните все обязательные поля!');
                 return;
             }
             
             const days = parseInt(document.getElementById('adminDays').value);
 
-            let cityValue = document.getElementById('adminCity').value.trim();
-            if (currentAdmin && currentAdmin.role === 'city') cityValue = currentAdmin.city;
-
             const service = {
                 id: 'admin_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
                 name: name,
                 category: category,
-                city: cityValue || currentCity,
+                city: city,
                 phone: phone,
                 site: document.getElementById('adminSite').value.trim(),
                 description: document.getElementById('adminDescription').value.trim(),
                 status: 'active',
                 expires: days === 0 ? null : new Date().getTime() + days*24*60*60*1000,
-                addedAt: new Date().toISOString()
+                addedAt: new Date().toISOString(),
+                consentGiven: true, // Для админских услуг согласие считается данным
+                consentDate: new Date().toISOString()
             };
             data.unshift(service);
             saveData();
@@ -1724,7 +2577,7 @@
             
             document.getElementById('adminName').value = '';
             document.getElementById('adminCategory').value = '';
-            if (!currentAdmin || currentAdmin.role !== 'city') document.getElementById('adminCity').value = '';
+            document.getElementById('adminCity').value = '';
             document.getElementById('adminPhone').value = '';
             document.getElementById('adminSite').value = '';
             document.getElementById('adminDescription').value = '';
@@ -1737,11 +2590,14 @@
                 alert('Нет прав на редактирование услуг других городов');
                 return;
             }
+            
             data.splice(i, 1);
             data.unshift(item);
             saveData();
+            
             renderAdminList();
             filterListBy('all', '', 'mainListContainer');
+            alert(`✅ Услуга "${item.name}" перемещена в начало!`);
         }
 
         function deleteItem(i){
@@ -1757,74 +2613,14 @@
             filterListBy('all', '', 'mainListContainer');
         }
 
-        /* ==== ОБРАТНАЯ СВЯЗЬ ==== */
-        function loadFeedback() {
-            const fb = localStorage.getItem('ustKatavFeedback');
-            feedbackData = fb ? JSON.parse(fb) : [];
-        }
-
-        function saveFeedback() {
-            localStorage.setItem('ustKatavFeedback', JSON.stringify(feedbackData));
-        }
-
-        function showFeedbackScreen() {
-            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-            document.getElementById('feedbackScreen').classList.add('active');
-        }
-
-        function sendFeedback() {
-            const text = document.getElementById('feedbackText').value.trim();
-            const phone = document.getElementById('feedbackPhone').value.trim();
-            if(!text) {
-                alert('Введите сообщение');
-                return;
-            }
-            feedbackData.unshift({
-                id: Date.now(),
-                text: text,
-                phone: phone || 'не указан',
-                city: currentCity,
-                date: new Date().toLocaleString('ru-RU')
-            });
-            saveFeedback();
-            alert('✅ Сообщение отправлено!');
-            showMainScreen();
-            document.getElementById('feedbackText').value = '';
-            document.getElementById('feedbackPhone').value = '';
-            if (adminMode) renderFeedbackForAdmin();
-        }
-
-        function getVisibleFeedback() {
-            if (currentAdmin && currentAdmin.role === 'super') return feedbackData;
-            if (currentAdmin && currentAdmin.role === 'city') return feedbackData.filter(item => item.city === currentAdmin.city);
-            return [];
-        }
-
-        function renderFeedbackForAdmin() {
-            const box = document.getElementById('adminFeedbackList');
-            if (!box) return;
-            const items = getVisibleFeedback();
-            if (!items.length) {
-                box.innerHTML = '<div style="font-size:13px;color:#7f8c8d;">Сообщений нет</div>';
-                return;
-            }
-            box.innerHTML = items.map(item => 
-                `<div style="background:#fff;border-radius:8px;padding:8px 10px;margin-bottom:6px;font-size:13px">
-                    <strong>${item.city}</strong> <small>${item.date}</small><br>
-                    <small>📞 ${item.phone}</small><br>
-                    <div>${item.text}</div>
-                </div>`
-            ).join('');
-        }
-
         /* ==== ЧАТ АДМИНОВ ==== */
         function loadAdminChat() {
-            const saved = localStorage.getItem('ustKatavAdminChat');
+            const saved = localStorage.getItem('spravochnikRuAdminChat');
             adminChat = saved ? JSON.parse(saved) : [];
         }
 
         function saveAdminChat() {
-            localStorage.setItem('ustKatavAdminChat', JSON.stringify(adminChat));
+            localStorage.setItem('spravochnikRuAdminChat', JSON.stringify(adminChat));
         }
 
         function getVisibleChat() {
